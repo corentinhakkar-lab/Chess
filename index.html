@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Échecs Hunter — Grimoire</title>
+<meta name="description" content="Grimoire d'entraînement aux échecs : ouvertures, finales et tactiques expliquées et vérifiées au moteur, progression par paliers, mémorisation espacée et parties contre l'ordinateur.">
+<meta name="theme-color" content="#f4ead4">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32-v2.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-180-v2.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Échecs">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================
+   ÉCHECS HUNTER — feuille de style « grimoire »
+   Inspiration : fiches de personnage des JRPG (parchemin,
+   ferrures dorées, banderoles, filets pointillés).
+   Toute couleur passe par une variable : le thème sombre
+   ne redéfinit QUE ces variables.
+   ========================================================== */
+:root{
+  /* ---- parchemin ---- */
+  --paper:#f4ead4; --paper2:#efe2c6; --card:#faf3e2; --card2:#f3e8cf;
+  --sunken:#e8dabb;
+  --edge:#c9b489; --edge2:#a98f5f; --rule:#d8c7a1;
+  /* ---- encre ---- */
+  --ink:#41341f; --ink2:#6b5a3c; --ink3:#8d7a56;
+  /* ---- accents ---- */
+  --gold:#a2762f; --gold2:#d6ac63; --gold3:#f0d69b;
+  --sage:#6f8f57; --azure:#5c7fa6; --rose:#c08585; --wine:#9c4f42;
+  --ok:#4f7f45; --ko:#a8493a; --warn:#a8791f;
+  /* ---- échiquier ---- */
+  --sq-l:#ecdcb8; --sq-d:#ab8455;
+  --sel:rgba(111,143,87,.55); --last:rgba(214,172,99,.5); --dot:rgba(65,52,31,.32);
+  /* ---- décor ---- */
+  --wood:#241c12; --wood2:#3a2d1c;
+  --shadow:0 2px 6px rgba(45,32,14,.13);
+  --shadow2:0 12px 34px rgba(30,20,8,.3);
+  --lift:0 22px 60px rgba(20,13,4,.45);
+  --fdisp:'Cormorant Garamond','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  --fbody:'EB Garamond','Iowan Old Style',Georgia,'Times New Roman',serif;
+  --fui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+html[data-theme=dark]{
+  --paper:#221b12; --paper2:#1b150e; --card:#2b2217; --card2:#241c13;
+  --sunken:#1a140d;
+  --edge:#5c4a2e; --edge2:#7a6238; --rule:#463824;
+  --ink:#ede0c4; --ink2:#c3b190; --ink3:#9c8b6c;
+  --gold:#d6ac63; --gold2:#e8c684; --gold3:#8a6c33;
+  --sage:#8fb06f; --azure:#7ba0c9; --rose:#d2a0a0; --wine:#c4695a;
+  --ok:#7fb069; --ko:#d2705f; --warn:#d6ac63;
+  --sq-l:#b8a179; --sq-d:#6d543a;
+  --wood:#0f0b06; --wood2:#1a130b;
+  --shadow:0 2px 6px rgba(0,0,0,.4);
+  --shadow2:0 12px 34px rgba(0,0,0,.55);
+  --lift:0 22px 60px rgba(0,0,0,.7);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--fbody);font-size:17px;line-height:1.6;color:var(--ink);
+  background:var(--wood);min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+/* fond bois + halo chaud */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(214,172,99,.16),transparent 60%),
+    repeating-linear-gradient(94deg,transparent 0 38px,rgba(0,0,0,.16) 38px 39px),
+    linear-gradient(160deg,var(--wood2),var(--wood))}
+/* grain de papier (SVG turbulence, aucun fichier externe) */
+.grain::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E")}
+html[data-theme=dark] .grain::after{mix-blend-mode:overlay;opacity:.3}
+
+a{color:var(--gold);text-underline-offset:3px}
+::selection{background:rgba(162,118,47,.28)}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:var(--wood2)}
+::-webkit-scrollbar-thumb{background:var(--edge2);border-radius:7px;border:3px solid var(--wood2);background-clip:content-box}
+
+/* ==========================================================
+   ORNEMENTS RÉUTILISABLES
+   ========================================================== */
+/* ferrures d'angle */
+.corners>i{position:absolute;width:26px;height:26px;pointer-events:none;z-index:3;
+  border:0 solid var(--gold);opacity:.85}
+.corners>i::after{content:'';position:absolute;width:5px;height:5px;background:var(--gold);
+  transform:rotate(45deg);box-shadow:0 0 0 1px var(--paper)}
+.corners .c1{top:7px;left:7px;border-top-width:2px;border-left-width:2px}
+.corners .c1::after{top:-3px;left:-3px}
+.corners .c2{top:7px;right:7px;border-top-width:2px;border-right-width:2px}
+.corners .c2::after{top:-3px;right:-3px}
+.corners .c3{bottom:7px;left:7px;border-bottom-width:2px;border-left-width:2px}
+.corners .c3::after{bottom:-3px;left:-3px}
+.corners .c4{bottom:7px;right:7px;border-bottom-width:2px;border-right-width:2px}
+.corners .c4::after{bottom:-3px;right:-3px}
+
+/* banderole */
+.banner{position:relative;display:block;margin:0 auto 4px;width:max-content;max-width:92%;
+  padding:7px 42px;background:linear-gradient(180deg,var(--card),var(--card2));
+  border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);
+  font-family:var(--fdisp);font-weight:700;letter-spacing:.34em;text-transform:uppercase;
+  font-size:20px;color:var(--ink);text-indent:.34em;box-shadow:var(--shadow)}
+.banner::before,.banner::after{content:'';position:absolute;top:0;bottom:0;width:22px;
+  background:linear-gradient(180deg,var(--card2),var(--sunken));border:1px solid var(--edge)}
+.banner::before{left:-22px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,32% 50%)}
+.banner::after{right:-22px;clip-path:polygon(0 0,100% 0,68% 50%,100% 100%,0 100%)}
+
+/* filet à losange central */
+.rule{display:flex;align-items:center;gap:11px;margin:19px 0 13px}
+.rule::before,.rule::after{content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rule),transparent)}
+.rule>span{font-family:var(--fdisp);font-size:15px;font-weight:700;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.rule>span::before{content:'❖ ';font-size:10px;opacity:.75;vertical-align:2px}
+.rule>span::after{content:' ❖';font-size:10px;opacity:.75;vertical-align:2px}
+
+/* ligne de stat à pointillés */
+.leaders{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0}
+.leaders li{display:flex;align-items:baseline;gap:6px;font-size:16px}
+.leaders .k{color:var(--ink2);white-space:nowrap;flex:0 1 auto;min-width:0}
+.leaders .d{flex:1 1 14px;border-bottom:2px dotted var(--rule);transform:translateY(-4px);min-width:14px}
+/* la valeur doit pouvoir passer à la ligne : en colonne étroite elle
+   débordait de la fiche (« Mats élémentair… »). */
+.leaders .v{font-weight:600;color:var(--ink);text-align:right;white-space:normal;
+  flex:0 1 auto;min-width:0;max-width:64%}
+
+/* pastilles rondes (éléments) */
+.orbs{display:flex;gap:9px;margin:11px 0 15px}
+.orb{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;
+  border:1.5px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),var(--shadow);
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.75),transparent 62%),var(--tint,var(--card2));
+  position:relative;cursor:default}
+.orb[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 7px);left:50%;
+  transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:var(--fui);
+  font-size:11px;letter-spacing:.04em;padding:4px 9px;border-radius:4px;white-space:nowrap;z-index:9}
+
+/* étiquette / tag */
+.tag{display:inline-block;font-family:var(--fui);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;padding:3px 9px;border:1px solid var(--edge);color:var(--ink2);
+  background:var(--card2);border-radius:2px;white-space:nowrap}
+.tag.gold{border-color:var(--gold);color:var(--gold)}
+.tag.ok{border-color:var(--ok);color:var(--ok)}
+.tag.ko{border-color:var(--ko);color:var(--ko)}
+.tag.due{border-color:var(--wine);color:var(--wine);background:rgba(156,79,66,.09)}
+
+/* bouton : petite plaque gravée */
+.btn{font-family:var(--fui);font-size:12.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  padding:10px 19px;cursor:pointer;color:var(--ink);border:1px solid var(--edge2);border-radius:3px;
+  background:linear-gradient(180deg,var(--card),var(--card2));box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .12s,box-shadow .12s,background .12s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 13px rgba(45,32,14,.2),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.gold{color:#3a2a0d;border-color:var(--gold);
+  background:linear-gradient(180deg,var(--gold3),var(--gold2));font-weight:700}
+html[data-theme=dark] .btn.gold{color:#241a08}
+.btn.gold:hover{box-shadow:0 5px 16px rgba(162,118,47,.42),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn.sm{padding:7px 13px;font-size:11px}
+.btn.wide{width:100%}
+
+input,select{font-family:var(--fbody);font-size:16px;color:var(--ink);padding:9px 12px;
+  background:var(--sunken);border:1px solid var(--edge);border-radius:3px;outline:none;
+  box-shadow:inset 0 2px 4px rgba(45,32,14,.09)}
+input:focus,select:focus{border-color:var(--gold)}
+
+/* ==========================================================
+   EN-TÊTE
+   ========================================================== */
+header{position:sticky;top:0;z-index:40;padding:calc(9px + env(safe-area-inset-top)) 16px 0;
+  background:var(--paper);box-shadow:0 6px 18px rgba(20,13,4,.28)}
+.hwrap{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding-bottom:9px}
+.sigil{width:42px;height:42px;flex:none;display:grid;place-items:center;font-size:23px;color:var(--gold);
+  border:1.5px solid var(--gold);border-radius:50%;background:var(--card);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),var(--shadow)}
+.htitle{font-family:var(--fdisp);font-weight:700;font-size:21px;letter-spacing:.16em;
+  text-transform:uppercase;line-height:1.1}
+.hsub{font-family:var(--fui);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink3)}
+.hspacer{flex:1}
+.hxp{text-align:right;font-family:var(--fui);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3)}
+.hxp b{display:block;font-family:var(--fdisp);font-size:20px;letter-spacing:0;color:var(--gold);
+  text-transform:none}
+nav{max-width:1120px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;
+  padding-bottom:2px}
+nav::-webkit-scrollbar{display:none}
+nav button{font-family:var(--fui);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;padding:9px 15px;cursor:pointer;color:var(--ink3);white-space:nowrap;
+  background:transparent;border:1px solid transparent;border-bottom:none;border-radius:5px 5px 0 0;
+  transition:.13s;position:relative}
+nav button:hover{color:var(--ink)}
+nav button.on{color:var(--ink);background:var(--paper);border-color:var(--edge);
+  box-shadow:0 -2px 7px rgba(45,32,14,.07)}
+nav button.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--paper)}
+nav .pip{display:inline-block;min-width:17px;height:17px;line-height:16px;margin-left:6px;
+  border-radius:9px;background:var(--wine);color:#fff;font-size:9.5px;text-align:center;padding:0 4px}
+
+/* ==========================================================
+   PAGE
+   ========================================================== */
+main{position:relative;z-index:2;max-width:1120px;margin:0 auto;
+  padding:0 calc(16px + env(safe-area-inset-left)) calc(60px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-right));
+  background:var(--paper);min-height:calc(100vh - 96px);
+  box-shadow:0 0 70px rgba(0,0,0,.5)}
+.view{display:none;padding-top:22px;animation:fade .3s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1}}
+
+/* le parchemin : bloc de base */
+.sheet{position:relative;background:var(--card);border:1px solid var(--edge);
+  box-shadow:var(--shadow2);padding:20px;overflow:hidden}
+.sheet::before{content:'';position:absolute;inset:5px;border:1px solid var(--rule);pointer-events:none}
+.sheet>*{position:relative;z-index:2}
+.pad{padding:22px 24px}
+@media(max-width:640px){.pad{padding:17px 15px}}
+
+.grid{display:grid;gap:15px}
+.row{display:flex;gap:15px;flex-wrap:wrap}
+.mut{color:var(--ink2)}.dim{color:var(--ink3)}
+.center{text-align:center}
+.prose{font-size:16.5px;line-height:1.72;color:var(--ink)}
+.prose p{margin-bottom:.75em}
+.prose p:last-child{margin-bottom:0}
+.prose b{color:var(--ink);font-weight:700}
+.prose em{font-style:italic;color:var(--ink2)}
+.prose code{font-family:var(--fui);font-size:.88em;background:var(--sunken);padding:1px 5px;
+  border:1px solid var(--rule);border-radius:2px}
+.prose .ko{color:var(--ko)}
+.prose ul,.prose ol{margin:0 0 .7em 1.2em}
+.prose li{margin-bottom:.32em}
+
+/* ==========================================================
+   FICHE DE PERSONNAGE (profil joueur + détail d'une carte)
+   ========================================================== */
+.profile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:26px;align-items:start}
+@media(max-width:860px){.profile{grid-template-columns:1fr;gap:19px}}
+.pname{font-family:var(--fdisp);font-weight:700;font-size:clamp(31px,5.4vw,46px);line-height:1.06;
+  letter-spacing:.012em;margin-bottom:2px}
+.pname-deco{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:11px;opacity:.8}
+.pname-deco::before,.pname-deco::after{content:'';height:1px;background:currentColor;flex:1;opacity:.55}
+.psub{font-family:var(--fbody);font-style:italic;font-size:16px;color:var(--ink2);margin-bottom:3px}
+
+/* vignette « polaroïd scotché » */
+.polaroid{position:relative;background:var(--card);padding:9px 9px 26px;border:1px solid var(--edge);
+  box-shadow:var(--shadow2);transform:rotate(-1.6deg);width:max-content;max-width:100%}
+.polaroid.r{transform:rotate(1.4deg)}
+.polaroid .cap{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-family:var(--fbody);
+  font-style:italic;font-size:12px;color:var(--ink3)}
+.polaroid::before,.polaroid::after{content:'';position:absolute;width:56px;height:19px;
+  background:rgba(226,206,158,.72);border:1px solid rgba(180,155,102,.42);
+  box-shadow:0 1px 3px rgba(45,32,14,.17);top:-9px}
+.polaroid::before{left:-14px;transform:rotate(-26deg)}
+.polaroid::after{right:-14px;transform:rotate(24deg)}
+html[data-theme=dark] .polaroid::before,html[data-theme=dark] .polaroid::after{
+  background:rgba(120,100,62,.55);border-color:rgba(150,125,80,.35)}
+
+/* cartes « armes » inclinées */
+.relics{display:flex;gap:13px;flex-wrap:wrap}
+.relic{position:relative;width:132px;padding:9px 9px 24px;background:var(--card);
+  border:1px solid var(--edge);box-shadow:var(--shadow);transform:rotate(-2deg);transition:.16s}
+.relic:nth-child(even){transform:rotate(1.7deg)}
+.relic:hover{transform:rotate(0) translateY(-3px) scale(1.03);box-shadow:var(--shadow2);z-index:4}
+.relic .ic{height:58px;display:grid;place-items:center;font-size:31px;color:var(--gold);
+  background:var(--sunken);border:1px solid var(--rule)}
+.relic .cap{position:absolute;left:4px;right:4px;bottom:5px;text-align:center;font-family:var(--fbody);
+  font-size:11px;line-height:1.25;color:var(--ink2)}
+
+/* ==========================================================
+   GALERIE DE CARTES
+   ========================================================== */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:15px}
+.gcard{position:relative;background:var(--card);border:1px solid var(--edge);padding:15px 15px 13px;
+  box-shadow:var(--shadow);cursor:pointer;transition:.16s;display:flex;flex-direction:column;gap:8px;
+  min-height:172px}
+.gcard::before{content:'';position:absolute;inset:4px;border:1px solid var(--rule);pointer-events:none}
+.gcard:hover{transform:translateY(-3px);box-shadow:var(--shadow2);border-color:var(--gold)}
+.gcard>*{position:relative;z-index:2}
+.gcard.lock{opacity:.5;cursor:not-allowed;filter:saturate(.35)}
+.gcard.lock:hover{transform:none;box-shadow:var(--shadow);border-color:var(--edge)}
+.gcard .gn{font-family:var(--fdisp);font-weight:700;font-size:20px;line-height:1.14}
+.gcard .gs{font-size:13.5px;color:var(--ink2);line-height:1.42;flex:1}
+.gcard .gf{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:auto}
+.stars{color:var(--gold);letter-spacing:2.5px;font-size:12.5px}
+.stars .e{color:var(--rule)}
+
+/* ==========================================================
+   ÉCHIQUIER
+   ========================================================== */
+.boardbox{position:relative;padding:14px;background:linear-gradient(160deg,var(--card),var(--card2));
+  border:1px solid var(--edge2);box-shadow:var(--shadow2);width:max-content;max-width:100%;margin:0 auto}
+.boardbox::before{content:'';position:absolute;inset:6px;border:1px solid var(--gold);opacity:.34;pointer-events:none}
+.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));
+  /* Pas d'aspect-ratio sur le conteneur : WebKit (Safari iOS) ne s'en sert pas
+     toujours pour dimensionner des rangées en 1fr, et l'échiquier s'aplatit.
+     Ici la hauteur est imposée par les cases elles-mêmes (voir .sq::before),
+     donc 8 rangées carrées => conteneur carré, sur tous les moteurs. */
+  grid-auto-rows:auto;
+  width:min(78vmin,432px);max-width:100%;
+  border:2px solid var(--edge2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 3px 12px rgba(45,32,14,.26)}
+.sq{position:relative;display:grid;place-items:center;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;min-width:0}
+/* Cale carrée : le padding en % se résout sur la largeur de la colonne,
+   ce qui rend la case carrée même quand aspect-ratio est ignoré. */
+.sq::before{content:'';grid-area:1/1;width:0;padding-top:100%}
+.sq>*{grid-area:1/1}
+.sq.l{background:var(--sq-l)}
+.sq.d{background:var(--sq-d)}
+.sq .pc{position:relative;z-index:3;font-size:min(8.2vmin,45px);line-height:1;pointer-events:none;
+  font-family:'Segoe UI Symbol','Apple Symbols',sans-serif}
+.sq .pc.w{color:#fffdf7;-webkit-text-stroke:1.1px #33240f;paint-order:stroke fill;
+  text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.sq .pc.b{color:#221709;-webkit-text-stroke:1.1px #221709;paint-order:stroke fill;
+  text-shadow:0 1px 1px rgba(255,255,255,.3)}
+.sq.sel::after,.sq.last::after{content:'';position:absolute;inset:0;z-index:1}
+.sq.sel::after{background:var(--sel)}
+.sq.last::after{background:var(--last)}
+.sq.hint::after{content:'';position:absolute;inset:0;z-index:1;background:rgba(162,118,47,.5);
+  animation:pulse .85s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sq .dot{position:absolute;z-index:2;width:26%;height:26%;border-radius:50%;background:var(--dot)}
+.sq .ring{position:absolute;z-index:2;inset:7%;border-radius:50%;border:3.5px solid var(--dot)}
+.sq .co{position:absolute;font-family:var(--fui);font-size:9px;font-weight:700;opacity:.42;z-index:4}
+.sq .co.f{bottom:1px;right:3px}
+.sq .co.r{top:1px;left:3px}
+.board.shake{animation:shk .32s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.bstat{margin-top:11px;text-align:center;font-size:14.5px;color:var(--ink2);min-height:24px}
+.bctl{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:11px}
+
+/* liste de coups */
+.moves{display:flex;flex-wrap:wrap;gap:4px;font-family:var(--fui);font-size:11.5px}
+.moves span{padding:3px 8px;border:1px solid var(--rule);background:var(--card2);color:var(--ink2);
+  border-radius:2px;cursor:pointer}
+.moves span.on{border-color:var(--gold);background:var(--gold3);color:#3a2a0d;font-weight:700}
+html[data-theme=dark] .moves span.on{color:#241a08}
+.moves span.num{border:none;background:none;color:var(--ink3);padding:3px 2px}
+
+/* commentaire du coup */
+.note{background:var(--card2);border:1px solid var(--rule);border-left:3px solid var(--gold);
+  padding:13px 15px;font-size:15.5px;line-height:1.65;min-height:74px}
+.note:empty{display:none}
+
+/* ==========================================================
+   SUPERPOSITION (fiche détaillée)
+   ========================================================== */
+#overlay{position:fixed;inset:0;z-index:70;display:none;overflow-y:auto;
+  background:rgba(20,13,5,.82);padding:16px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#overlay.on{display:block}
+.obox{max-width:1010px;margin:0 auto;background:var(--paper);border:1px solid var(--edge2);
+  box-shadow:var(--lift);position:relative;animation:rise .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1}}
+.oclose{position:absolute;top:11px;right:11px;z-index:9;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;font-size:17px;cursor:pointer;color:var(--ink2);
+  background:var(--card);border:1px solid var(--edge)}
+.oclose:hover{color:var(--ko);border-color:var(--ko)}
+
+/* ==========================================================
+   DIVERS
+   ========================================================== */
+.bar{height:11px;background:var(--sunken);border:1px solid var(--edge);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:13px}
+.kpi{text-align:center;padding:14px 9px;background:var(--card);border:1px solid var(--edge);
+  box-shadow:var(--shadow)}
+.kpi .n{font-family:var(--fdisp);font-weight:700;font-size:29px;line-height:1;color:var(--gold)}
+.kpi .l{font-family:var(--fui);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink3);margin-top:5px}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--rule)}
+th{font-family:var(--fui);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
+tbody tr:hover{background:var(--card2)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:95;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.tst{background:var(--card);border:1px solid var(--gold);padding:11px 20px;font-size:15px;
+  box-shadow:var(--lift);animation:rise .26s;max-width:88vw;text-align:center}
+.hide{display:none!important}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{#bg,header,nav,.bctl{display:none}main{box-shadow:none}}
+
+
+/* ==========================================================
+   MOBILE — l'en-tête doit rester compact : sur un écran de
+   375 px il grimpait à 159 px et repoussait tout le contenu.
+   ========================================================== */
+@media(max-width:640px){
+  body{font-size:16px}
+  .hwrap{gap:9px;padding-bottom:7px}
+  .sigil{width:34px;height:34px;font-size:19px}
+  .htitle{font-size:16px;letter-spacing:.11em}
+  .hsub{display:none}
+  .hxp{font-size:8.5px;letter-spacing:.09em}
+  .hxp b{font-size:16px}
+  #themeBtn{padding:6px 9px!important;font-size:13px!important}
+  nav button{padding:8px 11px;font-size:10.5px;letter-spacing:.08em}
+  .banner{font-size:15px;padding:6px 26px;letter-spacing:.24em}
+  .banner::before,.banner::after{width:15px}
+  .banner::before{left:-15px}.banner::after{right:-15px}
+  .pname{font-size:29px}
+  .rule>span{font-size:12.5px;letter-spacing:.16em}
+  .leaders li{font-size:15px}
+  .gal{grid-template-columns:1fr}
+  .relic{width:calc(50% - 7px)}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .boardbox{width:100%;padding:10px}
+  .board{width:100%}
+  #overlay{padding:8px}
+  .pad{padding:15px 13px}
+  .prose{font-size:15.5px}
+}
+@media(max-width:400px){
+  .htitle{font-size:14.5px}
+}
+
+/* Filet de sécurité : aucune fiche ne doit provoquer de défilement latéral. */
+.obox,.sheet,.profile,.boardbox{max-width:100%}
+.profile>*{min-width:0}
+
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<header>
+  <div class="hwrap">
+    <div class="sigil">♞</div>
+    <div>
+      <div class="htitle">Échecs Hunter</div>
+      <div class="hsub">Grimoire · Corentin</div>
+    </div>
+    <div class="hspacer"></div>
+    <div class="hxp"><b id="hLvl">0</b><span id="hRank">Rang E · Niv. 1</span></div>
+    <button class="btn sm" id="themeBtn" title="Thème clair / sombre" style="padding:8px 12px;font-size:15px">☀</button>
+  </div>
+  <nav>
+    <button data-v="profil" class="on">Profil</button>
+    <button data-v="donjon">Donjon<span class="pip hide" id="pipDonjon">0</span></button>
+    <button data-v="ouvertures">Ouvertures</button>
+    <button data-v="finales">Finales</button>
+    <button data-v="tactiques">Tactiques</button>
+    <button data-v="partie">Partie</button>
+    <button data-v="codex">Codex</button>
+  </nav>
+</header>
+
+<main>
+  <section class="view on" id="v-profil"></section>
+  <section class="view" id="v-donjon"></section>
+  <section class="view" id="v-open"></section>
+  <section class="view" id="v-end"></section>
+  <section class="view" id="v-tac"></section>
+  <section class="view" id="v-game"></section>
+  <section class="view" id="v-codex"></section>
+</main>
+
+<div id="overlay"><div class="obox" id="obox"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   1. MOTEUR D'ÉCHECS
+   Plateau : tableau de 64 cases, index 0 = a8 … 63 = h1 (ordre FEN).
+   Pièces : PNBRQK blancs (majuscules), pnbrqk noirs (minuscules), '' = vide.
+   ============================================================ */
+const FILES='abcdefgh';
+const START='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const rc=(r,c)=>r*8+c;
+const rOf=i=>i>>3, cOf=i=>i&7;
+const nameOf=i=>FILES[cOf(i)]+(8-rOf(i));
+const idOf=s=>rc(8-parseInt(s[1],10),FILES.indexOf(s[0]));
+const isW=p=>!!p&&p===p.toUpperCase();
+const same=(p,q)=>!!p&&!!q&&isW(p)===isW(q);
+const N_D=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+const B_D=[[-1,-1],[-1,1],[1,-1],[1,1]];
+const R_D=[[-1,0],[1,0],[0,-1],[0,1]];
+const K_D=B_D.concat(R_D);
+const VAL={p:100,n:320,b:330,r:500,q:900,k:0};
+
+function parseFEN(fen){
+  const f=fen.trim().split(/\s+/);
+  const b=new Array(64).fill('');
+  let i=0;
+  for(const ch of f[0]){
+    if(ch==='/')continue;
+    if(ch>='1'&&ch<='8') i+=+ch; else b[i++]=ch;
+  }
+  return {b, t:f[1]||'w', cas:f[2]&&f[2]!=='-'?f[2]:'',
+          ep:f[3]&&f[3]!=='-'?idOf(f[3]):-1, half:+(f[4]||0), full:+(f[5]||1)};
+}
+function toFEN(p){
+  let s='',e=0;
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const x=p.b[rc(r,c)];
+      if(x){ if(e){s+=e;e=0} s+=x } else e++;
+    }
+    if(e){s+=e;e=0}
+    if(r<7)s+='/';
+  }
+  return s+' '+p.t+' '+(p.cas||'-')+' '+(p.ep>=0?nameOf(p.ep):'-')+' '+p.half+' '+p.full;
+}
+const clone=p=>({b:p.b.slice(),t:p.t,cas:p.cas,ep:p.ep,half:p.half,full:p.full});
+
+function kingSq(p,w){
+  const k=w?'K':'k';
+  for(let i=0;i<64;i++) if(p.b[i]===k) return i;
+  return -1;
+}
+/** La case i est-elle attaquée par le camp byW ? */
+function attacked(p,i,byW){
+  const r=rOf(i),c=cOf(i);
+  const pd=byW?1:-1, pw=byW?'P':'p';
+  for(const dc of [-1,1]){
+    const rr=r+pd, cc=c+dc;
+    if(rr>=0&&rr<8&&cc>=0&&cc<8&&p.b[rc(rr,cc)]===pw) return true;
+  }
+  const nw=byW?'N':'n';
+  for(const d of N_D){
+    const rr=r+d[0],cc=c+d[1];
+    if(rr>=0&&rr<8&&cc>=0&&cc<8&&p.b[rc(rr,cc)]===nw) return true;
+  }
+  const kw=byW?'K':'k';
+  for(const d of K_D){
+    const rr=r+d[0],cc=c+d[1];
+    if(rr>=0&&rr<8&&cc>=0&&cc<8&&p.b[rc(rr,cc)]===kw) return true;
+  }
+  const sl=(dirs,set)=>{
+    for(const d of dirs){
+      let rr=r+d[0],cc=c+d[1];
+      while(rr>=0&&rr<8&&cc>=0&&cc<8){
+        const x=p.b[rc(rr,cc)];
+        if(x){ if(set.indexOf(x)>=0) return true; break }
+        rr+=d[0]; cc+=d[1];
+      }
+    }
+    return false;
+  };
+  if(sl(B_D, byW?['B','Q']:['b','q'])) return true;
+  if(sl(R_D, byW?['R','Q']:['r','q'])) return true;
+  return false;
+}
+const inCheck=(p,w)=>{ const k=kingSq(p,w); return k<0?false:attacked(p,k,!w) };
+
+function pseudo(p){
+  const out=[], w=p.t==='w';
+  const add=(f,t,o)=>out.push(Object.assign({from:f,to:t,promo:''},o||{}));
+  for(let i=0;i<64;i++){
+    const pc=p.b[i];
+    if(!pc||isW(pc)!==w) continue;
+    const r=rOf(i),c=cOf(i),k=pc.toLowerCase();
+    if(k==='p'){
+      const d=w?-1:1, start=w?6:1, last=w?0:7;
+      if(r+d>=0&&r+d<8&&!p.b[rc(r+d,c)]){
+        const one=rc(r+d,c);
+        if(r+d===last) for(const q of 'qrbn') add(i,one,{promo:w?q.toUpperCase():q});
+        else{
+          add(i,one);
+          if(r===start&&!p.b[rc(r+2*d,c)]) add(i,rc(r+2*d,c),{dbl:true});
+        }
+      }
+      for(const dc of [-1,1]){
+        const cc=c+dc, rr=r+d;
+        if(cc<0||cc>7||rr<0||rr>7) continue;
+        const t=rc(rr,cc), x=p.b[t];
+        if(x&&isW(x)!==w){
+          if(rr===last) for(const q of 'qrbn') add(i,t,{promo:w?q.toUpperCase():q});
+          else add(i,t);
+        } else if(t===p.ep&&!x) add(i,t,{ep:true});
+      }
+    } else if(k==='n'){
+      for(const d of N_D){
+        const rr=r+d[0],cc=c+d[1];
+        if(rr<0||rr>7||cc<0||cc>7) continue;
+        const t=rc(rr,cc);
+        if(!same(pc,p.b[t])) add(i,t);
+      }
+    } else if(k==='k'){
+      for(const d of K_D){
+        const rr=r+d[0],cc=c+d[1];
+        if(rr<0||rr>7||cc<0||cc>7) continue;
+        const t=rc(rr,cc);
+        if(!same(pc,p.b[t])) add(i,t);
+      }
+      const rrk=w?'R':'r', home=w?60:4;
+      if(i===home&&!inCheck(p,w)){
+        if(p.cas.indexOf(w?'K':'k')>=0 && p.b[home+3]===rrk && !p.b[home+1] && !p.b[home+2]
+           && !attacked(p,home+1,!w) && !attacked(p,home+2,!w)) add(i,home+2,{cas:'k'});
+        if(p.cas.indexOf(w?'Q':'q')>=0 && p.b[home-4]===rrk && !p.b[home-1] && !p.b[home-2] && !p.b[home-3]
+           && !attacked(p,home-1,!w) && !attacked(p,home-2,!w)) add(i,home-2,{cas:'q'});
+      }
+    } else {
+      const dirs = k==='b'?B_D : k==='r'?R_D : K_D;
+      for(const d of dirs){
+        let rr=r+d[0],cc=c+d[1];
+        while(rr>=0&&rr<8&&cc>=0&&cc<8){
+          const t=rc(rr,cc), x=p.b[t];
+          if(x){ if(!same(pc,x)) add(i,t); break }
+          add(i,t); rr+=d[0]; cc+=d[1];
+        }
+      }
+    }
+  }
+  return out;
+}
+function makeMove(p,m){
+  const n=clone(p), w=p.t==='w', pc=n.b[m.from], k=pc.toLowerCase();
+  const cap=n.b[m.to];
+  n.b[m.to]=m.promo||pc; n.b[m.from]='';
+  if(m.ep) n.b[rc(rOf(m.from),cOf(m.to))]='';
+  if(m.cas==='k'){ n.b[m.to-1]=n.b[m.to+1]; n.b[m.to+1]='' }
+  if(m.cas==='q'){ n.b[m.to+1]=n.b[m.to-2]; n.b[m.to-2]='' }
+  let cas=n.cas;
+  if(k==='k') cas=cas.replace(w?/[KQ]/g:/[kq]/g,'');
+  const drop={56:'Q',63:'K',0:'q',7:'k'};
+  if(drop[m.from]) cas=cas.replace(drop[m.from],'');
+  if(drop[m.to])   cas=cas.replace(drop[m.to],'');
+  n.cas=cas;
+  n.ep = m.dbl ? rc((rOf(m.from)+rOf(m.to))/2, cOf(m.from)) : -1;
+  n.half = (k==='p'||cap||m.ep) ? 0 : p.half+1;
+  n.full = w ? p.full : p.full+1;
+  n.t = w?'b':'w';
+  return n;
+}
+function legal(p){
+  const w=p.t==='w';
+  return pseudo(p).filter(m=>!inCheck(makeMove(p,m),w));
+}
+const isMate=p=>inCheck(p,p.t==='w')&&legal(p).length===0;
+const isStale=p=>!inCheck(p,p.t==='w')&&legal(p).length===0;
+/** Matériel insuffisant (nulle théorique) */
+function insufficient(p){
+  const m=[];
+  for(const x of p.b) if(x&&x.toLowerCase()!=='k') m.push(x);
+  if(!m.length) return true;
+  if(m.length===1&&'nbNB'.indexOf(m[0])>=0) return true;
+  if(m.length===2&&m.every(x=>'bB'.indexOf(x)>=0)){
+    const sq=[]; p.b.forEach((x,i)=>{ if('bB'.indexOf(x)>=0&&x) sq.push((rOf(i)+cOf(i))%2) });
+    if(sq.length===2&&sq[0]===sq[1]) return true;
+  }
+  return false;
+}
+/** Notation algébrique abrégée d'un coup légal de la position p */
+function san(p,m){
+  const pc=p.b[m.from], k=pc.toLowerCase();
+  let s;
+  if(m.cas) s = m.cas==='k'?'O-O':'O-O-O';
+  else{
+    const cap=!!p.b[m.to]||m.ep;
+    if(k==='p') s=(cap?FILES[cOf(m.from)]+'x':'')+nameOf(m.to)+(m.promo?'='+m.promo.toUpperCase():'');
+    else{
+      const rivals=legal(p).filter(x=>x.to===m.to&&x.from!==m.from&&p.b[x.from]===pc);
+      let d='';
+      if(rivals.length){
+        const sameFile=rivals.some(x=>cOf(x.from)===cOf(m.from));
+        const sameRank=rivals.some(x=>rOf(x.from)===rOf(m.from));
+        d = !sameFile ? FILES[cOf(m.from)] : !sameRank ? String(8-rOf(m.from)) : nameOf(m.from);
+      }
+      s=k.toUpperCase()+d+(cap?'x':'')+nameOf(m.to);
+    }
+  }
+  const nx=makeMove(p,m);
+  if(inCheck(nx,nx.t==='w')) s += legal(nx).length?'+':'#';
+  return s;
+}
+const clean=s=>s.replace(/[+#!?]+$/,'').replace(/0-0-0/g,'O-O-O').replace(/0-0/g,'O-O');
+/** Retrouve le coup légal correspondant à une notation SAN */
+function fromSAN(p,txt){
+  const want=clean(String(txt).trim());
+  for(const m of legal(p)) if(clean(san(p,m))===want) return m;
+  return null;
+}
+/** Joue une liste de coups SAN depuis une position ; renvoie l'historique */
+function playLine(fen,moves){
+  let p=parseFEN(fen); const hist=[{p:p, m:null, san:null}];
+  for(const s of moves){
+    const m=fromSAN(p,s);
+    if(!m) throw new Error('coup illégal : '+s+' dans '+toFEN(p));
+    const t=san(p,m); p=makeMove(p,m);
+    hist.push({p:p, m:m, san:t});
+  }
+  return hist;
+}
+
+/* ---------- 1b. IA : minimax alpha-bêta + tables de position ---------- */
+const PST={
+  p:[0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10, 5,5,10,25,25,10,5,5,
+     0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5, 5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0],
+  n:[-50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30,
+     -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30,
+     -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50],
+  b:[-20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,10,10,5,0,-10,
+     -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10,
+     -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20],
+  r:[0,0,0,0,0,0,0,0, 5,10,10,10,10,10,10,5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5,
+     -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, 0,0,0,5,5,0,0,0],
+  q:[-20,-10,-10,-5,-5,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,5,5,5,0,-10,
+     -5,0,5,5,5,5,0,-5, 0,0,5,5,5,5,0,-5, -10,5,5,5,5,5,0,-10,
+     -10,0,5,0,0,0,0,-10, -20,-10,-10,-5,-5,-10,-10,-20],
+  k:[-30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30,
+     -30,-40,-40,-50,-50,-40,-40,-30, -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10,
+     20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20],
+  kE:[-50,-40,-30,-20,-20,-30,-40,-50, -30,-20,-10,0,0,-10,-20,-30, -30,-10,20,30,30,20,-10,-30,
+     -30,-10,30,40,40,30,-10,-30, -30,-10,30,40,40,30,-10,-30, -30,-10,20,30,30,20,-10,-30,
+     -30,-30,0,0,0,0,-30,-30, -50,-30,-30,-30,-30,-30,-30,-50]
+};
+const mirror=i=>rc(7-rOf(i),cOf(i));
+/** Éloignement du centre : 0 au centre, 6 dans un coin. */
+function cornerDist(i){
+  const r=rOf(i), c=cOf(i);
+  return Math.max(3-r, r-4, 0) + Math.max(3-c, c-4, 0);
+}
+function evaluate(p){
+  let s=0, mat=0;
+  for(let i=0;i<64;i++){ const x=p.b[i]; if(x&&x.toLowerCase()!=='k') mat+=VAL[x.toLowerCase()] }
+  const endg = mat < 2400;
+  for(let i=0;i<64;i++){
+    const x=p.b[i]; if(!x) continue;
+    const k=x.toLowerCase(), w=isW(x);
+    const t = k==='k' ? (endg?PST.kE:PST.k) : PST[k];
+    const v = VAL[k] + t[w?i:mirror(i)];
+    s += w?v:-v;
+  }
+  // Mats élémentaires : sans ce terme, le camp fort tourne en rond au lieu de
+  // resserrer l'étau. Il faut deux gradients — chasser le roi adverse vers un
+  // coin, et rapprocher son propre roi — sinon l'évaluation est trop plate.
+  if(endg){
+    const wk=kingSq(p,true), bk=kingSq(p,false);
+    if(wk>=0&&bk>=0){
+      let wv=0, bv=0;
+      for(const x of p.b) if(x&&x.toLowerCase()!=='k'){ if(isW(x)) wv+=VAL[x.toLowerCase()]; else bv+=VAL[x.toLowerCase()] }
+      const dist=Math.abs(rOf(wk)-rOf(bk))+Math.abs(cOf(wk)-cOf(bk));
+      if(wv-bv>=400) s += 10*cornerDist(bk) + 4*(14-dist);
+      if(bv-wv>=400) s -= 10*cornerDist(wk) + 4*(14-dist);
+    }
+  }
+  return p.t==='w'?s:-s;
+}
+function order(p,ms){
+  return ms.map(m=>{
+    const v=p.b[m.to];
+    let sc = v ? 10*VAL[v.toLowerCase()] - VAL[p.b[m.from].toLowerCase()] : 0;
+    if(m.promo) sc+=800;
+    return {m:m,sc:sc};
+  }).sort((a,b)=>b.sc-a.sc).map(x=>x.m);
+}
+/** Recherche de quiescence : on ne s'arrête jamais au milieu d'une bagarre de
+    prises, sinon l'évaluation ment. On génère les prises via pseudo() et on ne
+    teste la légalité que de celles-là : passer par legal() ici coûterait la
+    génération complète des coups tranquilles, pour les jeter aussitôt. */
+function quiesce(p,a,b,d){
+  const st=evaluate(p);
+  if(st>=b) return b;
+  if(a<st) a=st;
+  if(d<=0) return a;
+  const w=p.t==='w';
+  const caps=pseudo(p).filter(m=>p.b[m.to]||m.promo);
+  for(const m of order(p,caps)){
+    const n=makeMove(p,m);
+    if(inCheck(n,w)) continue;
+    const s=-quiesce(n,-b,-a,d-1);
+    if(s>=b) return b;
+    if(s>a) a=s;
+  }
+  return a;
+}
+function negamax(p,d,a,b){
+  if(d<=0) return quiesce(p,a,b,3);
+  const ms=legal(p);
+  if(!ms.length) return inCheck(p,p.t==='w') ? -99000-d : 0;
+  for(const m of order(p,ms)){
+    const s=-negamax(makeMove(p,m),d-1,-b,-a);
+    if(s>=b) return b;
+    if(s>a) a=s;
+  }
+  return a;
+}
+/** Meilleur coup ; level 1 = faible/bruité, 2 = correct, 3 = plus fort */
+function bestMove(p,level){
+  level=level||2;
+  const ms=legal(p);
+  if(!ms.length) return null;
+  let depth = level===1?1 : level===2?2 : 3;
+  const noise = level===1?70 : level===2?18 : 0;
+  // Peu de pièces = peu de branches : on peut chercher bien plus loin pour le
+  // même coût. C'est indispensable pour les mats élémentaires, où une recherche
+  // courte ne voit aucun progrès et fait tourner les pièces en rond.
+  let np=0; for(const x of p.b) if(x) np++;
+  if(np<=5) depth+=2; else if(np<=8) depth+=1;
+  let best=null, bs=-1e9;
+  for(const m of order(p,ms)){
+    let s=-negamax(makeMove(p,m),depth,-1e9,1e9);
+    if(noise) s += (Math.random()*2-1)*noise;
+    if(s>bs){ bs=s; best=m }
+  }
+  return best;
+}
+/** Cherche un mat forcé en n coups (renvoie le coup ou null) — utilisé par l'auto-test */
+function mateIn(p,plies){
+  if(plies<=0) return null;
+  for(const m of legal(p)){
+    const n=makeMove(p,m);
+    if(isMate(n)) return m;
+    if(plies>=3 && !isStale(n)){
+      const reps=legal(n);
+      if(reps.every(r=>{
+        const q=makeMove(n,r);
+        return !!mateIn(q,plies-2);
+      })) return m;
+    }
+  }
+  return null;
+}
+
+const DATA={"cards":[{"id":"o-berger","kind":"opening","tier":1,"side":"b","name":"Défense du mat du berger","sub":"Ne plus jamais perdre en 4 coups","eco":"C20","fam":"e4 e5","lvl":"Débutant","stats":[["Code ECO","C20"],["Famille","e4 e5"],["Vous jouez","les Noirs"],["Longueur","8 demi-coups"]],"idea":"Le piège n°1 chez les débutants : la dame sort en h5 et menace Dxf7# (mat, car le fou c4 protège la dame et le roi n'a aucune case). La parade est simple et te laisse même mieux : la dame blanche sortie tôt devient une cible.","plans":{},"keys":["Le mat marche seulement parce que la dame en f7 est PROTÉGÉE par le fou c4.","g6 chasse la dame avec gain de temps.","Après 4.Df3, Cf6 ! bloque la colonne f — la dame ne peut plus atteindre f7.","Piège classique : 4...Cf6 ?? serait perdant si la dame était encore en h5. Ici elle est en f3 : le cavalier BLOQUE."],"moves":["e4","e5","Bc4","Nc6","Qh5","g6!","Qf3","Nf6!"],"notes":{"0":"<b>e4</b> — Coup blanc.","1":"<b>e5</b> — Ta réponse classique.","2":"<b>Bc4</b> — Le fou vise déjà f7.","3":"<b>Nc6</b> — Tu développes normalement — rien à craindre pour l'instant.","4":"<b>Qh5</b> — La menace : Dxf7#. Ne panique pas, ne joue surtout pas Cf6?? qui perd sur-le-champ.","5":"<b>g6!</b> — LE coup. Tu attaques la dame et tu coupes la diagonale h5-f7. La menace disparaît avec gain de temps.","6":"<b>Qf3</b> — La dame insiste sur f7 par la colonne f.","7":"<b>Nf6!</b> — Le cavalier BLOQUE la colonne f : la dame ne peut plus prendre en f7. Tu développes en gagnant du temps ; sa dame va se faire chasser toute la partie."},"traps":[{"name":"Le piège à connaître","moves":[],"text":"Après 3.Dh5, le coup naturel 3...Cf6?? perd immédiatement sur 4.Dxf7# — la dame est protégée par le fou c4 et le roi est étouffé par ses propres pièces (Dd8, Ff8)."}],"goal":"Tu es mieux : ses pièces sont mal placées, sa dame est une cible.","src":"hunter"},{"id":"o-sca","kind":"opening","tier":1,"side":"w","name":"Défense scandinave","sub":"Une défense simple à retenir : les Noirs échangent immédiatement leur pion d contre le…","eco":"B01","fam":"e4 autres","lvl":"Débutant","stats":[["Code ECO","B01"],["Famille","e4 autres"],["Niveau","Débutant"],["Longueur","17 demi-coups"]],"idea":"Une défense simple à retenir : les Noirs échangent immédiatement leur pion d contre le pion e blanc, et n'ont ensuite qu'un seul plan clair. Idéale quand on ne veut pas mémoriser de théorie. Le prix : la dame sort tôt et se fait bousculer.","plans":{"w":["Gagner des temps en tapant sur la dame noire (Cc3, Fd2, d4).","Développement rapide + roque long, jeu contre la dame a5."],"b":["Placer les pièces sur les bonnes cases : …c6, …Ff5, …e6, …Fd6/…Fb4.","Structure Caro-Kann sans les soucis. Solide mais passif."]},"moves":["e4","d5","exd5","Qxd5","Nc3","Qa5","d4","Nf6","Nf3","c6","Bc4","Bf5","Bd2","e6","Qe2","Bb4","O-O-O"],"notes":{"2":"<b>2.exd5</b> — pratiquement forcé, sinon les Noirs prennent en e4 avec égalité facile.","3":"<b>2…Dxd5</b> — les Noirs enfreignent volontairement la règle « ne sortez pas la dame trop tôt ». Ils savent qu'ils vont perdre un temps, et l'acceptent contre une structure saine.","4":"<b>3.Cc3</b> — le temps gagné, exactement comme prévu : développement <em>avec</em> attaque.","5":"<b>3…Da5</b> — la case principale : la dame est active et cloue potentiellement le cavalier c3. 3…Dd8 (retour à la maison) et 3…Dd6 sont les autres options sérieuses.","9":"<b>5…c6</b> — le coup clé : il donne à la dame a5 une case de repli en c7, empêche Cb5 et Fb5+, et soutient d5. Un pion qui fait trois métiers.","11":"<b>6…Ff5</b> — le fou dehors avant …e6. Même sagesse que dans la Caro-Kann.","16":"<b>9.O-O-O</b> — les Blancs roquent du côté où la dame noire traîne. Attention aux deux camps : les rois sont sur des ailes opposées, la course commence."},"traps":[],"src":"github"},{"id":"o-legal","kind":"opening","tier":1,"side":"w","name":"La leçon de Legall (pièges classiques)","sub":"Le plus beau piège de l'histoire des échecs (Sire de Legall, 1750) : les Blancs…","eco":"C41","fam":"e4 e5","lvl":"Débutant","stats":[["Code ECO","C41"],["Famille","e4 e5"],["Niveau","Débutant"],["Longueur","13 demi-coups"]],"idea":"Le plus beau piège de l'histoire des échecs (Sire de Legall, 1750) : les Blancs sacrifient leur <em>dame</em> pour mater avec trois pièces mineures. Une leçon sur le clouage : un clouage n'est pas absolu si le mat est au bout.","plans":{"w":["Repérer les fous braqués sur f7.","Comprendre qu'un cavalier « cloué » peut bouger si la conséquence est un mat."],"b":["Ne jamais clouer avec …Fg4 sans avoir un plan pour le pion e5.","Après …Fg4, jouer …Cf6 et …Fe7 avant de s'occuper d'autre chose."]},"moves":["e4","e5","Nf3","d6","Bc4","Bg4","Nc3","g6","Nxe5","Bxd1","Bxf7+","Ke7","Nd5#"],"notes":{"3":"<b>2…d6</b> — la défense Philidor. Solide mais passive : elle enferme le fou f8.","5":"<b>3…Fg4</b> — le clouage : le cavalier f3 ne peut pas bouger, sinon la dame d1 tombe. <em>C'est faux.</em>","7":"<b>4…g6??</b> — le coup perdant : les Noirs perdent un temps au lieu de jouer 4…Cf6 ou 4…Cc6.","8":"<b>5.Cxe5!!</b> — le cavalier bouge quand même. Si 5…dxe5?? 6.Dxg4 et les Blancs gagnent un pion pour rien. Les Noirs prennent donc la dame…","9":"<b>5…Fxd1??</b> — …et c'est perdu. La bonne défense était 5…dxe5 6.Dxg4 : un pion de moins, mais on joue encore.","10":"<b>6.Fxf7+!</b> — le fou se sacrifie pour attirer le roi. Échec !","11":"<b>6…Re7</b> — forcé (6…Rxf7?? 7.Cxg4 et les Blancs ont dame contre deux pièces).","12":"<b>7.Cd5#</b> — <em>mat de Legall</em>. Le roi e7 est encerclé par trois pièces mineures : le cavalier d5 fait échec, le cavalier e5 tient d7 et f7, le fou f7 tient e8 et e6. Retenez la leçon : <b>un clouage sur la dame n'est pas un clouage absolu.</b>"},"traps":[{"name":"Le piège du shilling de Blackburne","moves":["e4","e5","Nf3","Nc6","Bc4","Nd4","Nxe5","Qg5","Nxf7","Qxg2","Rf1","Qxe4+","Be2","Nf3#"],"text":"Les Noirs jouent <b>3…Cd4?!</b>, un coup objectivement mauvais qui offre le pion e5. Le gourmand <b>4.Cxe5??</b> perd sur-le-champ : <em>4…Dg5!</em> attaque simultanément le cavalier e5 et le pion g2. Après 5.Cxf7 Dxg2 6.Tf1 Dxe4+ 7.Fe2 Cf3#, mat étouffé au milieu de l'échiquier. La réfutation correcte est simplement <b>4.Cxd4! exd4 5.O-O</b> avec un pion en plus et un jeu confortable — <em>ne prenez pas ce que l'adversaire vous tend, prenez ce qui est vraiment libre.</em>"}],"src":"github"},{"id":"o-principes","kind":"opening","tier":1,"side":"w","name":"Les 4 principes","sub":"Ouvrir correctement, toujours","eco":"C50","fam":"e4 e5","lvl":"Débutant","stats":[["Code ECO","C50"],["Famille","e4 e5"],["Vous jouez","les Blancs"],["Longueur","9 demi-coups"]],"idea":"Avant d'apprendre la moindre théorie, 90 % des parties se gagnent en respectant quatre principes. Cette ligne (l'Italienne) les illustre tous : chaque coup blanc fait au moins deux choses utiles.","plans":{},"keys":["Occupe le centre avec un pion (e4/d4) : tes pièces respirent.","Développe cavaliers puis fous vers le centre — un coup par pièce.","Roque tôt : le roi au coin, la tour entre en jeu.","Ne sors pas la dame trop tôt et ne bouge pas deux fois la même pièce sans raison."],"moves":["e4","e5","Nf3","Nc6","Bc4","Bc5","c3","Nf6","d4"],"notes":{"0":"<b>e4</b> — Prend le centre et ouvre DEUX pièces d'un coup : le fou f1 et la dame.","1":"<b>e5</b> — Les Noirs font pareil : ils réclament leur part du centre.","2":"<b>Nf3</b> — Développe AVEC une menace (le pion e5). Un coup qui développe et attaque vaut double.","3":"<b>Nc6</b> — Le seul développement qui défend e5 naturellement.","4":"<b>Bc4</b> — Le fou vise f7 : la case la plus faible du camp noir (défendue par le roi seul).","5":"<b>Bc5</b> — Les Noirs copient et visent f2, ta case faible symétrique.","6":"<b>c3</b> — Prépare d4 : construire un centre de pions solide avant d'attaquer.","7":"<b>Nf6</b> — Développe en attaquant e4.","8":"<b>d4</b> — Le centre idéal. Trois pièces développées, le roque suit. Tu as gagné l'ouverture."},"traps":[],"goal":"Comprendre POURQUOI chaque coup, pas le mémoriser.","src":"hunter"},{"id":"o-ita","kind":"opening","tier":1,"side":"w","name":"Partie italienne","sub":"L'ouverture de départ idéale : chaque coup applique un principe de base. On occupe le…","eco":"C50","fam":"e4 e5","lvl":"Débutant","stats":[["Code ECO","C50"],["Famille","e4 e5"],["Niveau","Débutant"],["Longueur","12 demi-coups"]],"idea":"L'ouverture de départ idéale : chaque coup applique un principe de base. On occupe le centre, on sort les pièces mineures vers le centre, on roque. Le fou en c4 vise f7, le point le plus faible du camp noir (défendu seulement par le roi).","plans":{"w":["Construire le centre par c3 puis d4 (le « centre italien »).","Manœuvre du cavalier b1-d2-f1-g3 pour attaquer le roque.","Viser f7 avec le fou c4 et éventuellement Cg5."],"b":["Copier le schéma : Fc5, Cf6, d6, roque.","Contrer au centre par d5 au bon moment.","Surveiller f7 et la case g5."]},"moves":["e4","e5","Nf3","Nc6","Bc4","Bc5","c3","Nf6","d3","d6","O-O","O-O"],"notes":{"0":"<b>1.e4</b> — le coup le plus direct. Il occupe une case centrale, ouvre la diagonale du fou f1 <em>et</em> celle de la dame. Deux pièces libérées d'un seul coup.","1":"<b>1…e5</b> — les Noirs répondent par la symétrie : ils réclament leur part du centre et libèrent les mêmes pièces. C'est le « jeu ouvert ».","2":"<b>2.Cf3</b> — développement <em>avec menace</em> (le pion e5). Un coup de développement qui force la réponse adverse est un coup gagné.","3":"<b>2…Cc6</b> — défend e5 <em>en développant</em>. Ne défendez jamais avec 2…d6 par réflexe : ça enferme le fou f8.","4":"<b>3.Fc4</b> — la « case italienne ». Le fou pointe sur f7 : c'est la case la plus faible de l'adversaire au début, car seul le roi la garde.","5":"<b>3…Fc5</b> — symétrie logique : le fou noir vise f2 en miroir. On appelle ça le <em>Giuoco Piano</em>, « le jeu tranquille ».","6":"<b>4.c3</b> — coup discret mais fondamental : il prépare d4 pour construire un gros centre de pions. Il coûte un temps et prend la case c3 au cavalier — c'est le prix à payer.","7":"<b>4…Cf6</b> — développe <em>et</em> attaque e4. Les Noirs contre-attaquent au lieu de subir.","8":"<b>5.d3</b> — la version moderne et solide (le « Giuoco Pianissimo »). L'ancien 5.d4 mène à des complications théoriques énormes ; d3 garde e4 et laisse le plan d4 pour plus tard.","9":"<b>5…d6</b> — même logique côté noir : soutenir e5, ouvrir le fou c8.","10":"<b>6.O-O</b> — le roi se met à l'abri et la tour rejoint le centre. En dessous de 1500 Elo, la moitié des parties sont perdues faute d'avoir roqué à temps.","11":"<b>6…O-O</b> — position type : centre stable, développement terminé, chacun cherche maintenant un plan (Te1, Cbd2-f1-g3 côté blanc)."},"traps":[{"name":"Mat du berger (à connaître pour ne jamais le subir)","moves":["e4","e5","Bc4","Nc6","Qh5","Nf6","Qxf7#"],"text":"Les Blancs sortent la dame très tôt pour viser f7. <b>3…Cf6??</b> est l'erreur : il faut jouer <em>3…g6!</em> qui attaque la dame en gagnant un temps, ou <em>3…De7</em>. Après le berger raté, la dame blanche se fait chasser et les Noirs sont mieux. Retenez : ce mat ne marche que contre quelqu'un qui ne le connaît pas — et sortir la dame tôt est une <b>mauvaise</b> stratégie."},{"name":"Le Fegatello (attaque du foie frit)","moves":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5","Nxf7","Kxf7","Qf3+","Ke6","Nc3"],"text":"Après 4.Cg5 (le seul coup « anti-principe » toléré : la même pièce bouge deux fois, mais la menace sur f7 est réelle), 5…Cxd5? est trop gourmand. Le sacrifice <b>6.Cxf7!</b> arrache le roi noir de son abri et le traîne au centre. La bonne défense noire est <em>5…Ca5!</em> (la variante Polerio-Fritz), qui chasse le fou c4 en acceptant un pion de retard pour un jeu actif."}],"src":"github"},{"id":"o-eco","kind":"opening","tier":1,"side":"w","name":"Partie écossaise","sub":"Les Blancs ouvrent le centre tout de suite au lieu de manœuvrer. Résultat : peu de…","eco":"C45","fam":"e4 e5","lvl":"Débutant","stats":[["Code ECO","C45"],["Famille","e4 e5"],["Niveau","Débutant"],["Longueur","17 demi-coups"]],"idea":"Les Blancs ouvrent le centre tout de suite au lieu de manœuvrer. Résultat : peu de théorie, des positions ouvertes où les pièces se battent immédiatement. Excellent choix pour sortir de l'Espagnole et de l'Italienne sans mémoriser 15 coups.","plans":{"w":["Développement rapide, colonne d, jeu contre le pion d7 arriéré.","Occuper le centre par c3 et Fc4/Fe3."],"b":["Taper sur le cavalier d4 et sur e4.","…Fc5 avec pression sur d4 et f2, ou …Cf6 immédiat."]},"moves":["e4","e5","Nf3","Nc6","d4","exd4","Nxd4","Bc5","Be3","Qf6","c3","Nge7","Bc4","Ne5","Be2","Qg6","O-O"],"notes":{"4":"<b>3.d4!</b> — le principe : <em>ouvrez le centre quand vous êtes mieux développé</em>. Ici, c'est vrai (Cf3 est sorti, le cavalier noir aussi, mais c'est aux Blancs de jouer).","7":"<b>4…Fc5</b> — attaque le cavalier d4 et vise f2. L'autre coup majeur est 4…Cf6 (la variante Schmidt).","8":"<b>5.Fe3</b> — défend d4 et propose l'échange des fous.","9":"<b>5…Df6</b> — la dame ajoute la pression sur d4. Sortie de dame précoce, mais ici elle est utile et difficile à chasser.","13":"<b>7…Ce5</b> — le cavalier saute sur la case active en attaquant le fou c4. Position vivante : chaque coup est un contact de pièces."},"traps":[],"src":"github"},{"id":"o-lon","kind":"opening","tier":1,"side":"w","name":"Système de Londres","sub":"Un « système » : les Blancs jouent presque toujours les mêmes coups quoi que fassent les…","eco":"D02","fam":"d4 d5","lvl":"Débutant","stats":[["Code ECO","D02"],["Famille","d4 d5"],["Niveau","Débutant"],["Longueur","17 demi-coups"]],"idea":"Un « système » : les Blancs jouent presque toujours les mêmes coups quoi que fassent les Noirs. Zéro théorie à mémoriser, position solide à chaque partie. La différence avec les autres ouvertures : le fou c1 sort <em>avant</em> de jouer e3 — sinon il reste enfermé.","plans":{"w":["Setup automatique : d4, Cf3, Ff4, e3, c3, Fd3, Cbd2, O-O.","Attaque à l'aile roi : Ce5, f4, Df3-h3, Tf3-h3.","Le fou f4/g3 tient la diagonale b8-h2, dirigée sur le roque noir."],"b":["…c5 et …Db6 pour taper sur b2 et d4.","Échanger le bon fou blanc par …Fd6 ou …Ch5.","Ne pas laisser Ce5 s'installer."]},"moves":["d4","d5","Nf3","Nf6","Bf4","e6","e3","c5","c3","Nc6","Nbd2","Bd6","Bg3","O-O","Bd3","b6","O-O"],"notes":{"4":"<b>3.Ff4!</b> — <em>le coup qui définit le système</em>. Sortez le fou dame <b>avant</b> de jouer e3. Si vous jouez e3 en premier, votre fou c1 devient un figurant pour toute la partie. C'est vrai dans TOUTES les ouvertures 1.d4.","6":"<b>4.e3</b> — maintenant, oui. Le fou est déjà dehors, e3 ne fait que soutenir d4 et libérer le fou f1.","7":"<b>4…c5</b> — le coup de pioche habituel sur d4.","8":"<b>5.c3</b> — solide comme un roc : d4 est défendu deux fois, le fou d3 aura la case c2 en cas de besoin.","10":"<b>5…Fd6</b> — les Noirs proposent l'échange du bon fou blanc. Réponse standard : Fg3, ne jamais prendre.","16":"<b>9.O-O</b> — position type. Les Blancs joueront Ce5, f4, Df3, puis Tf1-f3-h3. Un plan mécanique, mortel contre les joueurs de club."},"traps":[],"src":"github"},{"id":"o-fegatello","kind":"opening","tier":2,"side":"w","name":"Attaque Fegatello","sub":"Le « foie frit » — sacrifice sur f7","eco":"C57","fam":"e4 e5","lvl":"Débutant+","stats":[["Code ECO","C57"],["Famille","e4 e5"],["Vous jouez","les Blancs"],["Longueur","15 demi-coups"]],"idea":"Contre la Défense des Deux Cavaliers, si les Noirs reprennent en d5 avec le cavalier, tu sacrifies le cavalier en f7 : le roi noir est traîné au centre et ne roquera jamais. Une des attaques les plus violentes du répertoire 1.e4.","plans":{},"keys":["Cg5 attaque f7 deux fois (Cg5 + Fc4) : f7 n'est défendu que par le roi.","5...Cxd5?! est l'erreur naturelle mais le cavalier d5 devient une cible.","6.Cxf7! Rxf7 7.Df3+ : attaque le roi ET cloue/attaque le cavalier d5.","Le roi noir est nu au centre : tu as une attaque écrasante pour la pièce."],"moves":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5!?","d5","exd5","Nxd5?!","Nxf7!!","Kxf7","Qf3+","Ke6","Nc3"],"notes":{"5":"<b>Nf6</b> — La Défense des Deux Cavaliers : au lieu de défendre e5, les Noirs attaquent e4.","6":"<b>Ng5!?</b> — Anti-positionnel (2e coup du cavalier) mais très fort : f7 est attaqué deux fois et défendu une seule.","7":"<b>d5</b> — La seule bonne réaction : contre-attaquer au centre pour couper la diagonale du fou.","8":"<b>exd5</b> — Tu prends.","9":"<b>Nxd5?!</b> — L'erreur naturelle : reprendre. Mais ce cavalier n'est défendu que par la dame.","10":"<b>Nxf7!!</b> — Le Fegatello. Le roi doit prendre, sinon tu es simplement un pion devant avec une position gagnante.","11":"<b>Kxf7</b> — Forcé.","12":"<b>Qf3+</b> — L'idée : ÉCHEC au roi et attaque du cavalier d5, cloué par ta dame.","13":"<b>Ke6</b> — Le roi doit défendre le cavalier lui-même — sinon tu récupères la pièce.","14":"<b>Nc3</b> — Tu ajoutes un attaquant sur d5. Le roi noir est au centre, sans roque possible : ton attaque vaut plus qu'une pièce."},"traps":[{"name":"Le piège à connaître","moves":[],"text":"La bonne défense noire est 5...Ca5! (Polerio) — voir la fiche suivante."}],"goal":"Roi noir nu au centre, initiative durable.","src":"hunter"},{"id":"o-ckann","kind":"opening","tier":2,"side":"w","name":"Caro-Kann — Avance","sub":"La Caro-Kann est la « Française qui a résolu son problème » : les Noirs jouent …c6…","eco":"B12","fam":"e4 autres","lvl":"Débutant","stats":[["Code ECO","B12"],["Famille","e4 autres"],["Niveau","Débutant"],["Longueur","14 demi-coups"]],"idea":"La Caro-Kann est la « Française qui a résolu son problème » : les Noirs jouent …c6 d'abord, pour pouvoir sortir le fou c8 <em>avant</em> de fermer la diagonale avec …e6. Solide, sans risque, avec une bonne structure de pions — la défense préférée de Karpov.","plans":{"w":["Attaquer le fou f5 par Cf3-h4 ou g4/h4-h5.","Gain d'espace, attaque à l'aile roi.","Exploiter le retard de développement noir."],"b":["Sortir le fou en f5 avant …e6 : le seul vrai gain sur la Française.","Frapper d4 par …c5.","Structure saine : la finale sera confortable."]},"moves":["e4","c6","d4","d5","e5","Bf5","Nf3","e6","Be2","c5","Be3","Nd7","O-O","Ne7"],"notes":{"1":"<b>1…c6</b> — un coup modeste qui prépare 2…d5 avec un soutien de pion. Contrairement à la Scandinave (1…d5), la dame ne sortira pas trop tôt.","5":"<b>3…Ff5!</b> — <em>le coup qui justifie toute l'ouverture</em>. Le fou sort par la porte avant qu'on la ferme. Comparez avec la Française : là-bas ce fou reste prisonnier vingt coups.","6":"<b>4.Cf3</b> — développement tranquille. Le coup tranchant est 4.Cc3 suivi de g4 pour piéger le fou.","7":"<b>4…e6</b> — <em>maintenant</em> on peut fermer : le fou est déjà dehors.","9":"<b>5…c5</b> — comme toujours, coup de pioche sur la base d4 de la chaîne.","13":"<b>7…Ce7</b> — le cavalier vise f5 ou g6. Position typique : les Noirs sont un peu à l'étroit mais n'ont aucune faiblesse. C'est le pari de la Caro-Kann : <em>zéro faiblesse, on verra en finale.</em>"},"traps":[],"src":"github"},{"id":"o-polerio","kind":"opening","tier":2,"side":"b","name":"Défense Polerio","sub":"Ca5 ! — la réfutation du Fegatello","eco":"C58","fam":"e4 e5","lvl":"Débutant+","stats":[["Code ECO","C58"],["Famille","e4 e5"],["Vous jouez","les Noirs"],["Longueur","18 demi-coups"]],"idea":"Côté Noir, tu ne dois PAS reprendre en d5 avec le cavalier. Le coup 5...Ca5! attaque le fou c4 et accepte de donner un pion pour un développement énorme. C'est la ligne principale, jouée au plus haut niveau.","plans":{},"keys":["Ca5 attaque le fou c4 : la pièce clé de toute l'attaque blanche.","Tu donnes un pion mais tu obtiens une avance de développement et la paire de fous.","...h6 chasse le cavalier g5 ; ...e4 gagne encore un temps sur le cavalier.","Compensation classique : un pion contre l'initiative permanente."],"moves":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Na5!","Bb5+","c6","dxc6","bxc6","Be2","h6","Nf3","e4!"],"notes":{"5":"<b>Nf6</b> — Deux Cavaliers.","6":"<b>Ng5</b> — L'agression sur f7.","7":"<b>d5</b> — Obligatoire : tu coupes la diagonale du fou.","9":"<b>Na5!</b> — LE coup. Tu ignores le pion et tu attaques le fou c4 — le pilier de son attaque.","10":"<b>Bb5+</b> — La retraite principale (le fou reste actif en donnant échec).","11":"<b>c6</b> — Tu attaques le fou et prépares de récupérer l'espace.","13":"<b>bxc6</b> — Tu reprends : centre de pions mobile, colonne b ouverte pour ta tour.","14":"<b>Be2</b> — Le fou rentre humblement — il a perdu 3 temps.","15":"<b>h6</b> — Tu chasses le cavalier.","17":"<b>e4!</b> — Tu gagnes encore un temps sur le cavalier et tu prends l'espace. Un pion de moins, mais toutes tes pièces sont meilleures."},"traps":[],"goal":"Un pion de moins, une initiative durable — compensation totale.","src":"hunter"},{"id":"o-fra","kind":"opening","tier":2,"side":"w","name":"Défense française — Avance","sub":"Les Noirs préparent …d5 avec …e6, ce qui rend leur centre très solide — au prix d'un fou…","eco":"C02","fam":"e4 autres","lvl":"Intermédiaire","stats":[["Code ECO","C02"],["Famille","e4 autres"],["Niveau","Intermédiaire"],["Longueur","16 demi-coups"]],"idea":"Les Noirs préparent …d5 avec …e6, ce qui rend leur centre très solide — au prix d'un fou c8 enfermé derrière la chaîne de pions. Toute la partie tourne autour d'un thème unique : la chaîne de pions blanche d4-e5, que les Noirs attaquent à sa <em>base</em>.","plans":{"w":["Tenir la chaîne d4-e5 : la défendre avec c3, Cf3, Fd3, éventuellement Fe3 et Cbd2.","Gain d'espace à l'aile roi, attaque contre le roque noir.","Ne jamais laisser tomber d4 sans compensation."],"b":["Frapper la base de la chaîne : …c5 puis …f6.","Résoudre le problème du fou c8 : …b6 et …Fa6, ou …Fd7-b5.","Empiler sur d4 : …Db6, …Cc6, …Fd7 puis …Cge7-f5."]},"moves":["e4","e6","d4","d5","e5","c5","c3","Nc6","Nf3","Qb6","a3","Nh6","b4","cxd4","cxd4","Nf5"],"notes":{"1":"<b>1…e6</b> — la Française. Solide, résistante, mais elle accepte un défaut structurel : le fou c8 est « le mauvais fou », coincé derrière ses propres pions e6 et d5. Toute votre partie consistera à lui trouver une vie.","4":"<b>3.e5</b> — la variante d'avance. Les Blancs verrouillent le centre et gagnent de l'espace. La règle de Nimzowitsch s'applique : <em>une chaîne de pions s'attaque à sa base</em>. La base blanche est d4.","5":"<b>3…c5</b> — exactement ça : coup de pioche sur la base d4. Il arrive presque toujours dans la Française.","6":"<b>4.c3</b> — les Blancs bétonnent la base.","9":"<b>5…Db6</b> — la dame vient ajouter un attaquant sur d4 (et attaque b2 au passage). Les Noirs jouent à trois contre deux sur cette seule case.","10":"<b>6.a3</b> — prophylaxie : les Blancs préparent b4 pour chasser le pion c5 et sécuriser d4 <em>avant</em> que la pression ne devienne insoutenable.","11":"<b>6…Ch6!</b> — un coup laid mais logique : le cavalier va en f5 où il tape sur d4 (et non en f6 où il serait derrière ses pions). Aux échecs, la case cible commande le chemin, pas l'esthétique."},"traps":[],"src":"github"},{"id":"o-alapin","kind":"opening","tier":2,"side":"w","name":"Sicilienne — Variante Alapin","sub":"2.c3 : éviter toute la théorie sicilienne","eco":"B22","fam":"e4 c5","lvl":"Débutant+","stats":[["Code ECO","B22"],["Famille","e4 c5"],["Vous jouez","les Blancs"],["Longueur","15 demi-coups"]],"idea":"La Sicilienne (1...c5) est l'ouverture la plus théorique du monde. L'Alapin (2.c3) te permet de l'éviter complètement : tu joues un centre de pions classique et tu obtiens des positions saines et faciles à comprendre.","plans":{},"keys":["Le but de c3 : jouer d4 et le reprendre AVEC le pion c3 → tu gardes un centre e4+d4.","Contre 2...d5, tu prends et tu chasses la dame avec d4/Cf3.","L'autre réponse principale est 2...Cf6 3.e5 Cd5 4.d4.","Positions à jouer avec un développement naturel — pas de mémorisation."],"moves":["e4","c5","c3!?","d5","exd5","Qxd5","d4","Nc6","Nf3","Bg4","Be2","cxd4","cxd4","e6","Nc3"],"notes":{"1":"<b>c5</b> — La Sicilienne.","2":"<b>c3!?</b> — L'Alapin. Petit coup, grande idée : préparer d4 en pouvant reprendre avec le pion c3.","3":"<b>d5</b> — La réponse la plus critique : contre-attaquer le centre tant qu'il n'est pas installé.","5":"<b>Qxd5</b> — Forcé pour récupérer le pion — mais la dame sort tôt (comme en Scandinave).","6":"<b>d4</b> — Le centre idéal, exactement ce que c3 préparait.","8":"<b>Nf3</b> — Développement avec tempo (le pion d4 est soutenu).","9":"<b>Bg4</b> — Il cloue ton cavalier.","10":"<b>Be2</b> — Tu casses le clouage en développant et en préparant le roque.","12":"<b>cxd4</b> — Tu reprends avec le pion c3 : centre e-vide mais pion d4 fort, colonne c ouverte.","14":"<b>Nc3</b> — Développe AVEC menace sur la dame d5 : encore un temps gagné. Tu roques ensuite, position agréable et sans théorie."},"traps":[],"goal":"Centre solide, développement naturel, zéro théorie à mémoriser.","src":"hunter"},{"id":"o-berlinoise","kind":"opening","tier":3,"side":"b","name":"Défense berlinoise","sub":"Le mur qui a arrêté Kasparov","eco":"C67","fam":"e4 e5","lvl":"Intermédiaire","stats":[["Code ECO","C67"],["Famille","e4 e5"],["Vous jouez","les Noirs"],["Longueur","16 demi-coups"]],"idea":"Côté Noir contre l'Espagnole : la Berlinoise. Kramnik l'a utilisée pour battre Kasparov en 2000. Tu vas dans une finale où tu as la paire de fous et une structure solide, au prix du droit de roquer.","plans":{},"keys":["3...Cf6 attaque e4 immédiatement, sans perdre de temps avec ...a6.","Après 4.O-O Cxe4! 5.Te1 Cd6 le pion revient : la position se simplifie.","La « finale berlinoise » : tu perds le roque, mais tu as la PAIRE DE FOUS.","Ton plan à long terme : ...Fe6/...Fe7, roi vers e8-d7, et ouvrir la position pour tes fous."],"moves":["e4","e5","Nf3","Nc6","Bb5","Nf6!","O-O","Nxe4!","Re1","Nd6","Nxe5","Be7!","Bf1","Nxe5","Rxe5","O-O"],"notes":{"4":"<b>Bb5</b> — L'Espagnole.","5":"<b>Nf6!</b> — La Berlinoise : contre-attaque directe sur e4. Solide comme un mur.","6":"<b>O-O</b> — La ligne principale.","7":"<b>Nxe4!</b> — Tu prends vraiment. Le pion n'est qu'un emprunt : les Blancs vont le récupérer.","8":"<b>Re1</b> — Il cloue et menace de gagner la pièce.","9":"<b>Nd6</b> — Le cavalier recule en attaquant le fou b5 — coup double-usage.","10":"<b>Nxe5</b> — Il récupère le pion en attaquant ton Cc6.","11":"<b>Be7!</b> — Coup fin : tu développes en préparant ...Cxe5 (et si Cxc6 dxc6, ta structure reste saine).","12":"<b>Bf1</b> — Le fou recule.","15":"<b>O-O</b> — Tu roques d'abord ! La suite est 15.d4 Ff6 avec la fameuse structure berlinoise : solide, deux fous, égalité totale."},"traps":[],"goal":"Simplification vers une finale confortable avec la paire de fous.","src":"hunter"},{"id":"o-petro","kind":"opening","tier":3,"side":"w","name":"Défense russe (Petrov)","sub":"Au lieu de défendre e5, les Noirs contre-attaquent e4 par la symétrie. Réputation : la…","eco":"C42","fam":"e4 e5","lvl":"Intermédiaire","stats":[["Code ECO","C42"],["Famille","e4 e5"],["Niveau","Intermédiaire"],["Longueur","18 demi-coups"]],"idea":"Au lieu de défendre e5, les Noirs contre-attaquent e4 par la symétrie. Réputation : la défense la plus solide et la plus ennuyeuse de tout l'échiquier. Si vous voulez la nulle avec les Noirs contre plus fort que vous, c'est ici.","plans":{"w":["Chercher un micro-avantage d'espace par c4 et le centre.","Éviter les échanges pour garder du jeu."],"b":["Égaliser proprement, échanger, aller en finale.","Placer le cavalier e4 solidement et finir le développement."]},"moves":["e4","e5","Nf3","Nf6","Nxe5","d6","Nf3","Nxe4","d4","d5","Bd3","Nc6","O-O","Be7","c4","Nb4","Be2","O-O"],"notes":{"3":"<b>2…Cf6!?</b> — les Noirs ignorent la menace sur e5 et créent la leur sur e4. Un contre-jeu, pas une défense.","4":"<b>3.Cxe5</b> — accepter. 3.Cc3 mène à la Quatre-Cavaliers, tranquille.","5":"<b>3…d6!</b> — <em>le coup à connaître absolument</em>. Le piège mortel est 3…Cxe4?? 4.De2! Cf6?? 5.Cc6+! (échec à la découverte) et la dame noire tombe. Il faut <em>d'abord</em> chasser le cavalier, <em>ensuite</em> reprendre.","7":"<b>4…Cxe4</b> — maintenant c'est sûr : le cavalier blanc est parti.","8":"<b>5.d4</b> — les Blancs prennent le centre et défient le cavalier e4.","9":"<b>5…d5</b> — les Noirs soutiennent leur cavalier avec un pion. Position parfaitement symétrique, jeu équilibré."},"traps":[{"name":"Le piège du Petrov (3…Cxe4??)","moves":["e4","e5","Nf3","Nf6","Nxe5","Nxe4","Qe2","Nf6","Nc6+"],"text":"Après <b>3…Cxe4??</b> 4.De2! le cavalier e4 est cloué et attaqué. Si 4…Cf6?? alors <em>5.Cc6+!</em> découvre l'échec de la dame e2 sur le roi e8 <b>et</b> attaque la dame d8 : la dame est perdue. Même 4…De7 5.Dxe4 laisse les Blancs un pion de plus. C'est le piège le plus rentable du répertoire 1.e4 e5."}],"src":"github"},{"id":"o-slave","kind":"opening","tier":3,"side":"b","name":"Défense slave","sub":"...c6 : garder le fou c8 vivant","eco":"D17","fam":"d4 d5","lvl":"Intermédiaire","stats":[["Code ECO","D17"],["Famille","d4 d5"],["Vous jouez","les Noirs"],["Longueur","14 demi-coups"]],"idea":"La Slave répond au problème du GDR autrement : tu soutiens d5 avec ...c6 au lieu de ...e6, donc le fou c8 garde sa diagonale. C'est l'ouverture des joueurs qui veulent du solide SANS pièce enfermée.","plans":{},"keys":["...c6 soutient d5 sans enfermer le fou c8 : la différence clé avec le GDR.","...dxc4! est possible car ...b5 peut défendre le pion (le pion c6 le soutient).","4.a4 empêche ...b5 mais affaiblit b4 : ton fou ira exactement là.","...Ff5 avant ...e6 : le fou sort AVANT de fermer la diagonale. Toujours."],"moves":["d4","d5","c4","c6!","Nf3","Nf6","Nc3","dxc4","a4","Bf5!","e3","e6","Bxc4","Bb4"],"notes":{"3":"<b>c6!</b> — La Slave. Tu soutiens d5 avec le pion c — le fou c8 reste libre.","7":"<b>dxc4</b> — Tu prends ! Contrairement au GDR, ici tu peux essayer de garder le pion avec ...b5.","8":"<b>a4</b> — Le coup nécessaire : il empêche ...b5. Mais il affaiblit définitivement la case b4.","9":"<b>Bf5!</b> — LE coup de la Slave : le fou sort AVANT de jouer ...e6. C'est toute la justification de l'ouverture.","11":"<b>e6</b> — Maintenant seulement tu fermes — le fou est déjà dehors, il ne craint rien.","12":"<b>Bxc4</b> — Il récupère son pion.","13":"<b>Bb4</b> — Tu occupes la case affaiblie par a4 ! Développement complet, aucune faiblesse : la Slave est une des défenses les plus fiables du monde."},"traps":[],"goal":"Développement harmonieux, fou c8 actif, structure saine.","src":"hunter"},{"id":"o-esp","kind":"opening","tier":3,"side":"w","name":"Espagnole (Ruy Lopez)","sub":"L'ouverture la plus jouée au haut niveau depuis 150 ans. Le fou b5 attaque le défenseur…","eco":"C65","fam":"e4 e5","lvl":"Intermédiaire","stats":[["Code ECO","C65"],["Famille","e4 e5"],["Niveau","Intermédiaire"],["Longueur","17 demi-coups"]],"idea":"L'ouverture la plus jouée au haut niveau depuis 150 ans. Le fou b5 attaque le défenseur du pion e5 (le cavalier c6) plutôt que le pion lui-même : c'est une attaque indirecte du centre. Les Blancs obtiennent une pression durable, sans risque.","plans":{"w":["Le fameux « manœuvre espagnole » : Cb1-d2-f1-g3 vers le roque noir.","Jouer d4 au bon moment pour ouvrir le centre quand on est mieux développé.","h3 pour interdire …Fg4 avant de jouer d4."],"b":["Chasser le fou par …a6 et …b5, gagner de l'espace à l'aile dame.","Le plan Tchigorine : …Ca5, …c5, …Dc7 avec pression sur le centre.","Ou la variante Berlinoise (3…Cf6) qui vise l'échange des dames."]},"moves":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O","h3"],"notes":{"4":"<b>3.Fb5</b> — l'idée espagnole : je n'attaque pas e5, j'attaque son <em>défenseur</em>. Une menace indirecte est souvent plus embêtante qu'une menace frontale.","5":"<b>3…a6</b> — le coup Morphy. Les Noirs posent une question au fou : « tu prends ou tu recules ? »","6":"<b>4.Fa4</b> — le fou recule mais garde la diagonale a4-e8 : la menace Fxc6 reste dans l'air pour plus tard. 4.Fxc6 dxc6 (la variante d'échange) donne aux Blancs une meilleure structure de pions mais aux Noirs la paire de fous.","7":"<b>4…Cf6</b> — attaque e4. Notez que les Noirs ne peuvent pas gagner de pion : 4…Cxe4? 5.Cxe5! et le clouage sur la colonne e récupère le matériel.","8":"<b>5.O-O</b> — les Blancs abandonnent e4 <em>temporairement</em>. C'est la variante ouverte si les Noirs prennent : 5…Cxe4 6.d4! et les Blancs récupèrent le pion avec un jeu très actif.","9":"<b>5…Fe7</b> — modeste mais correct : le fou casse le clouage potentiel et prépare le roque.","10":"<b>6.Te1</b> — la tour soutient e4 <em>avant</em> que les Noirs ne prennent. Toujours défendre avec une pièce qui veut de toute façon être là.","11":"<b>6…b5</b> — obligatoire maintenant, sinon 7.Fxc6 dxc6 8.Cxe5 gagne réellement un pion (le fou a4 clouait le cavalier c6 contre le roi e8).","12":"<b>7.Fb3</b> — le fou trouve sa case définitive, braqué sur f7 et le centre.","13":"<b>7…d6</b> — soutient e5 et ouvre le fou c8. On entre dans l'Espagnole fermée.","14":"<b>8.c3</b> — prépare d4 et ouvre la case c2 comme refuge au fou b3.","16":"<b>9.h3</b> — le coup le plus célèbre de l'ouverture : une « case d'air » qui empêche à jamais …Fg4 (le clouage du cavalier f3, défenseur de d4). Les Blancs prennent leur temps parce que la position est fermée : <em>dans une position fermée, un temps de prophylaxie vaut mieux qu'un coup pressé</em>."},"traps":[{"name":"Le piège de l'arche de Noé","moves":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","d6","d4","b5","Bb3","Nxd4","Nxd4","exd4","Qxd4","c5","Qd5","Be6","Qc6+","Bd7","Qd5","c4"],"text":"Un piège vieux comme le monde, qui a attrapé Capablanca lui-même. Les Blancs récupèrent leur pion avec <b>8.Dxd4??</b> et se font enfermer le fou : les pions noirs a6-b5-c4 forment une arche autour du fou b3, qui n'a plus une seule case. Leçon : dans l'Espagnole, <em>ne prenez jamais en d4 avec la dame</em> tant que le fou est sur la diagonale a2-g8 et que …c5-c4 est jouable."}],"src":"github"},{"id":"o-kid","kind":"opening","tier":3,"side":"w","name":"Est-indienne","sub":"L'ouverture la plus sauvage contre 1.d4. Les Noirs laissent délibérément les Blancs…","eco":"E60","fam":"d4 Cf6","lvl":"Avancé","stats":[["Code ECO","E60"],["Famille","d4 Cf6"],["Niveau","Avancé"],["Longueur","16 demi-coups"]],"idea":"L'ouverture la plus sauvage contre 1.d4. Les Noirs laissent délibérément les Blancs construire un centre énorme… pour le faire exploser ensuite. Les rois roquent du même côté mais chacun attaque sur une aile différente. C'est une course : qui mate l'autre en premier.","plans":{"w":["Attaque à l'aile dame : c5, poussée des pions b et c, invasion sur la colonne c.","Le centre bloqué garantit que rien ne viendra du milieu."],"b":["Attaque à l'aile roi, en un mot : …f5, …f4, …g5, …h5, …g4 et mat.","Manœuvre du cavalier e7-g6 ou d7-f6.","Ne jamais défendre à l'aile dame : c'est une course, pas un duel."]},"moves":["d4","Nf6","c4","g6","Nc3","Bg7","e4","d6","Nf3","O-O","Be2","e5","O-O","Nc6","d5","Ne7"],"notes":{"3":"<b>2…g6</b> — le fianchetto : le fou ira en g7, sur la plus longue diagonale de l'échiquier, braqué sur d4 et le centre blanc.","7":"<b>4…d6</b> — modeste, mais il prépare la vraie idée : …e5.","11":"<b>6…e5!</b> — le coup thématique : les Noirs défient enfin le centre.","14":"<b>8.d5</b> — les Blancs ferment. À partir de là, <em>tout est écrit</em> : le centre est verrouillé, donc chacun attaque sur son aile. Les Blancs poussent c4-c5, les Noirs f7-f5. Celui qui arrive une fraction de seconde plus tôt gagne.","15":"<b>8…Ce7</b> — le cavalier dégage la colonne f pour …f5 et rejoindra g6. Les Noirs ont un plan de dix coups qu'ils exécutent presque les yeux fermés."},"traps":[],"src":"github"},{"id":"o-gdr","kind":"opening","tier":3,"side":"w","name":"Gambit dame refusé","sub":"L'ouverture classique par excellence, celle des championnats du monde du XXe siècle. Les…","eco":"D35","fam":"d4 d5","lvl":"Intermédiaire","stats":[["Code ECO","D35"],["Famille","d4 d5"],["Niveau","Intermédiaire"],["Longueur","16 demi-coups"]],"idea":"L'ouverture classique par excellence, celle des championnats du monde du XXe siècle. Les Blancs offrent le pion c4 non pas pour le sacrifier, mais pour <em>détourner</em> le pion d5 du centre. Les Noirs refusent poliment et construisent une forteresse.","plans":{"w":["Attaque de minorité : b4-b5 pour créer une faiblesse en c6.","Pression sur d5, occupation de la colonne c.","Le fou g5 cloue le cavalier f6, défenseur de d5."],"b":["Résoudre le fou c8 (le problème éternel) par …b6 et …Fb7, ou …dxc4 puis …b5.","Libération par …c5 ou …e5.","Casser le clouage par …h6 et …Ce4."]},"moves":["d4","d5","c4","e6","Nc3","Nf6","Bg5","Be7","e3","O-O","Nf3","h6","Bh4","b6","cxd5","Nxd5"],"notes":{"2":"<b>2.c4</b> — le gambit dame. Ce n'est pas un vrai gambit : après 2…dxc4 3.e3! les Blancs récupèrent le pion quand ils veulent, car les Noirs ne peuvent pas le garder (3…b5?? 4.a4! casse tout).","3":"<b>2…e6</b> — refuser. Solide, mais le fou c8 est de nouveau enfermé. C'est <em>le</em> thème de toutes les ouvertures 1.d4 d5.","6":"<b>4.Fg5</b> — le clouage classique : le cavalier f6 défend d5, donc on l'attaque indirectement en le clouant sur la dame.","10":"<b>6…h6</b> — la « question posée au fou » : recule ou échange ? Un coup utile qui donne aussi de l'air au roi (fini les mats du couloir).","14":"<b>8.cxd5</b> — la structure Carlsbad. Le plan blanc devient mécanique : <em>attaque de minorité</em> — deux pions (a et b) marchent contre trois pions noirs (a, b, c) pour créer un pion faible en c6."},"traps":[],"src":"github"},{"id":"o-ang","kind":"opening","tier":3,"side":"w","name":"Ouverture anglaise","sub":"Une Sicilienne avec un temps de plus et les couleurs inversées ! Les Blancs jouent…","eco":"A20","fam":"Autres","lvl":"Intermédiaire","stats":[["Code ECO","A20"],["Famille","Autres"],["Niveau","Intermédiaire"],["Longueur","16 demi-coups"]],"idea":"Une Sicilienne avec un temps de plus et les couleurs inversées ! Les Blancs jouent flexible : le centre n'est pas occupé tout de suite, on développe d'abord et on décide ensuite. Ouverture des joueurs positionnels (Kramnik, Carlsen).","plans":{"w":["Fianchetto Fg2, pression sur d5 et la longue diagonale.","Expansion à l'aile dame par b4, Tb1.","Frapper au centre par d4 quand c'est bon."],"b":["Traiter la position comme une Sicilienne inversée avec un temps de moins.","…d5 tôt pour prendre le centre."]},"moves":["c4","e5","Nc3","Nf6","g3","d5","cxd5","Nxd5","Bg2","Nb6","Nf3","Nc6","O-O","Be7","a3","O-O"],"notes":{"0":"<b>1.c4</b> — l'ouverture anglaise. Un coup flexible : il contrôle d5, développe l'aile dame, et ne s'engage sur aucune structure. Les Blancs gardent toutes les options ouvertes.","4":"<b>3.g3</b> — le fianchetto typique : le fou g2 tire à travers tout l'échiquier vers d5 et b7.","5":"<b>3…d5</b> — les Noirs revendiquent le centre.","7":"<b>4…Cxd5</b> — attention : le cavalier va se faire chasser par les Blancs, qui gagnent des temps.","14":"<b>8.a3</b> — prépare b4 et l'expansion à l'aile dame. C'est le plan éternel de l'Anglaise : <em>gagner du terrain là où l'on est plus fort.</em>"},"traps":[],"src":"github"},{"id":"o-noe","kind":"opening","tier":3,"side":"b","name":"Piège de l'Arche de Noé","sub":"Le fou blanc piégé par trois pions","eco":"C77","fam":"e4 e5","lvl":"Intermédiaire","stats":[["Code ECO","C77"],["Famille","e4 e5"],["Vous jouez","les Noirs"],["Longueur","22 demi-coups"]],"idea":"Un des pièges les plus anciens (d'où son nom). Dans l'Espagnole, si les Blancs prennent en d4 avec la dame, tes pions de l'aile dame avancent en cascade et emprisonnent le fou b3. Il n'a littéralement aucune case.","plans":{},"keys":["Le motif : les pions a6-b5-c4 forment une cage autour du fou en b3.","6...Cxd4! 7.Cxd4 exd4 8.Dxd4?? est l'erreur : la dame doit reprendre... mais elle sera chassée.","8...c5! chasse la dame avec tempo, et le pion c avance encore.","Après ...c4, le fou b3 est mort : a2/c2/a4/c4/d5 sont toutes couvertes ou occupées."],"moves":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","d6","d4","b5!","Bb3","Nxd4!","Nxd4","exd4","Qxd4??","c5!","Qd5","Be6","Qc6+","Bd7","Qd5","c4!"],"notes":{"4":"<b>Bb5</b> — Espagnole.","7":"<b>d6</b> — La défense Steinitz différée.","8":"<b>d4</b> — Les Blancs jouent le centre trop vite.","9":"<b>b5!</b> — Tu chasses le fou vers b3 — la case du piège.","11":"<b>Nxd4!</b> — Le début du piège : tu offres l'échange au centre.","13":"<b>exd4</b> — Maintenant la dame doit reprendre le pion...","14":"<b>Qxd4??</b> — L'erreur fatale. (Correct était 9.c3! ou Dxd4 en connaissant le danger.)","15":"<b>c5!</b> — Tempo sur la dame — et le pion c commence sa marche.","16":"<b>Qd5</b> — La dame cherche l'activité en attaquant a8 et f7.","17":"<b>Be6</b> — Tu bloques tout en développant.","19":"<b>Bd7</b> — Tu repousses encore.","21":"<b>c4!</b> — L'Arche se referme. Le fou b3 est enfermé : a2 et c2 sont occupées par ses pions, a4 et c4 par les tiens. Tu gagnes une pièce entière."},"traps":[],"goal":"Le fou b3 est capturé au coup suivant : +1 pièce.","src":"hunter"},{"id":"o-gr","kind":"opening","tier":4,"side":"w","name":"Gambit du roi","sub":"L'ouverture romantique du XIXe siècle : les Blancs sacrifient un pion dès le 2e coup pour…","eco":"C33","fam":"e4 e5","lvl":"Avancé","stats":[["Code ECO","C33"],["Famille","e4 e5"],["Niveau","Avancé"],["Longueur","16 demi-coups"]],"idea":"L'ouverture romantique du XIXe siècle : les Blancs sacrifient un pion dès le 2e coup pour dévier le pion e5, ouvrir la colonne f et bâtir un centre. Objectivement douteuse, subjectivement dévastatrice — celui qui connaît les pièges massacre celui qui ne les connaît pas.","plans":{"w":["Reprendre le centre par d4, récupérer le pion f4 avec Fxf4 ou g3.","Utiliser la colonne f ouverte contre f7.","Développement ultra-rapide, initiative avant tout."],"b":["Garder le pion et rendre le matériel au bon moment pour finir le développement.","Frapper par …d5! : le contre au centre est toujours la meilleure réponse à un gambit d'aile.","…g5 pour tenir le pion f4 — solide mais risqué (le roi noir s'expose)."]},"moves":["e4","e5","f4","exf4","Bc4","Nf6","Nc3","c6","Bb3","d5","exd5","cxd5","d4","Bd6","Nge2","O-O"],"notes":{"2":"<b>2.f4</b> — le gambit du roi. Les Blancs offrent un pion pour dévier e5 du centre et ouvrir la colonne f. Le prix : la diagonale e1-h4 est ouverte sur leur propre roi.","4":"<b>3.Fc4</b> — le gambit du fou. 3.Cf3 (le gambit du cavalier) est plus prudent : il interdit …Dh4+.","5":"<b>3…Cf6!</b> — la bonne réponse moderne : développement + attaque de e4, au lieu du cupide 3…Dh4+ 4.Rf1 qui donne aux Blancs un jeu formidable (leur roi est en sécurité en f1 et les Noirs perdront des temps avec leur dame).","9":"<b>5…d5!</b> — <em>la règle d'or contre tout gambit d'aile : contre-attaquez au centre.</em> Les Noirs rendent le pion pour ouvrir leurs pièces et neutraliser l'initiative.","12":"<b>7.d4</b> — les Blancs ont ce qu'ils voulaient : un centre de pions et la colonne f. Le pion f4 sera récupéré. La partie est équilibrée mais tranchante."},"traps":[{"name":"Le mat de l'imbécile (2 coups — la honte absolue)","moves":["f3","e5","g4","Qh4#"],"text":"Le mat le plus rapide possible. <b>1.f3??</b> et <b>2.g4??</b> ouvrent la diagonale e1-h4 sur leur propre roi et ne développent rien. Personne ne joue ça, mais il illustre <em>pourquoi</em> le gambit du roi est risqué : dès que le pion f bouge, la diagonale e1-h4 est le talon d'Achille des Blancs. Dans le vrai gambit du roi, …Dh4+ est toujours dans l'air."}],"src":"github"},{"id":"o-nimzo","kind":"opening","tier":4,"side":"w","name":"Nimzo-indienne","sub":"L'ouverture qui a changé la théorie des échecs. Au lieu d'occuper le centre avec des…","eco":"E20","fam":"d4 Cf6","lvl":"Avancé","stats":[["Code ECO","E20"],["Famille","d4 Cf6"],["Niveau","Avancé"],["Longueur","16 demi-coups"]],"idea":"L'ouverture qui a changé la théorie des échecs. Au lieu d'occuper le centre avec des pions, les Noirs le <em>contrôlent à distance</em> avec des pièces. Le fou b4 cloue le cavalier c3, gardien de la case e4 : les Blancs ne peuvent pas jouer e4 tranquillement.","plans":{"w":["Obtenir e4 malgré tout (Dc2, a3, Cge2).","Garder la paire de fous, jouer contre les pions doublés éventuels."],"b":["Échanger Fxc3 pour donner des pions doublés aux Blancs, puis bloquer.","Contrôler e4 avec …b6, …Fb7, …Ce4, …d5.","Frapper d4 par …c5."]},"moves":["d4","Nf6","c4","e6","Nc3","Bb4","e3","O-O","Bd3","d5","Nf3","c5","O-O","dxc4","Bxc4","Nbd7"],"notes":{"5":"<b>3…Fb4</b> — l'idée de Nimzowitsch : le fou cloue le cavalier c3. Or c3 est le principal soutien de la case e4. Les Noirs empêchent donc e4 <em>sans y mettre un seul pion</em>. C'est de l'hypermodernisme : « le centre se contrôle, il ne s'occupe pas forcément ».","6":"<b>4.e3</b> — la variante Rubinstein, la plus jouée. 4.Dc2 (Classique) évite les pions doublés, 4.a3 (Sämisch) les accepte volontairement contre la paire de fous.","9":"<b>5…d5</b> — les Noirs occupent quand même le centre : la Nimzo se transpose souvent dans des structures de Gambit Dame améliorées.","11":"<b>6…c5</b> — le coup de pioche habituel sur d4. Retenez ce réflexe : <em>face à un pion d4 blanc, cherchez toujours …c5.</em>"},"traps":[],"src":"github"},{"id":"o-sic","kind":"opening","tier":4,"side":"w","name":"Sicilienne — Najdorf","sub":"La réponse la plus combative à 1.e4, et la plus jouée de toute l'histoire. Les Noirs…","eco":"B90","fam":"e4 c5","lvl":"Avancé","stats":[["Code ECO","B90"],["Famille","e4 c5"],["Niveau","Avancé"],["Longueur","18 demi-coups"]],"idea":"La réponse la plus combative à 1.e4, et la plus jouée de toute l'histoire. Les Noirs refusent la symétrie : ils échangent un pion latéral (c) contre un pion central (d) et obtiennent la colonne c ouverte plus une majorité de pions au centre. En échange, les Blancs ont l'avance de développement et l'espace.","plans":{"w":["Attaque à la baïonnette : f3, Dd2, O-O-O, g4-g5 contre le roque noir.","Ou le plan positionnel Fe2, O-O, a4 pour freiner l'expansion noire.","Occuper la case d5 (le trou de la structure noire)."],"b":["Contre-attaque sur la colonne c : …Tc8, …Da5, sacrifice de qualité …Txc3 classique.","Poussée …b5-b4 pour chasser le cavalier c3, gardien de d5.","Contrôler d5 avec …Fe6, …Cbd7, …b5."]},"moves":["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6","Nc3","a6","Be3","e5","Nb3","Be6","f3","Be7","Qd2","O-O"],"notes":{"1":"<b>1…c5</b> — la Sicilienne. Un coup asymétrique : les Noirs ne veulent pas d'une partie équilibrée, ils veulent <em>déséquilibrer</em> pour jouer pour le gain. C'est pourquoi elle est le premier choix des joueurs d'attaque.","4":"<b>3.d4</b> — le Sicilien ouvert. Les Blancs ouvrent le centre pendant qu'ils sont mieux développés.","5":"<b>3…cxd4</b> — l'échange fondamental : pion c contre pion d. Les Noirs auront la colonne c semi-ouverte pointée sur le cavalier c3.","6":"<b>4.Cxd4</b> — un beau cavalier au centre. Mais il est aussi une cible : les Noirs gagneront des temps dessus.","9":"<b>5…a6</b> — <em>le coup Najdorf</em>. Un petit coup de pion mystérieux qui fait tout : il interdit à jamais Cb5 (le saut d'attaque contre d6), et prépare …b5 pour prendre l'espace à l'aile dame. Le coup le plus profond du répertoire d'ouverture.","10":"<b>6.Fe3</b> — l'attaque anglaise, la ligne la plus dangereuse : les Blancs annoncent le roque long et l'assaut de pions g4-g5.","11":"<b>6…e5</b> — les Noirs chassent le cavalier et prennent le centre, au prix d'un trou permanent en d5.","14":"<b>8.f3</b> — soutient g4 et rend e4 solide. Chaque camp attaque sur son aile : les Blancs à l'aile roi, les Noirs à l'aile dame. <em>Dans la Sicilienne, la partie est une course de vitesse.</em>","16":"<b>9.Dd2</b> — connecte les tours et prépare O-O-O. Position typique : très tendue, un temps de retard peut coûter la partie."},"traps":[],"src":"github"},{"id":"o-marshall","kind":"opening","tier":5,"side":"b","name":"Attaque Marshall","sub":"Le gambit qui terrorise l'Espagnole","eco":"C89","fam":"e4 e5","lvl":"Maîtrise","stats":[["Code ECO","C89"],["Famille","e4 e5"],["Vous jouez","les Noirs"],["Longueur","22 demi-coups"]],"idea":"Marshall a gardé cette idée secrète des années pour la sortir contre Capablanca en 1918. Tu sacrifies un pion au centre pour une attaque permanente sur le roque blanc. Un siècle plus tard, les meilleurs joueurs du monde évitent encore cette ligne.","plans":{},"keys":["8...d5! est le sacrifice : tu ouvres tout au centre alors que tes pièces sont prêtes.","Compensation : dame + fous + tour sur les colonnes ouvertes, contre un roi blanc sans défenseurs.","Ton attaque est permanente : les Blancs doivent défendre des dizaines de coups avec précision.","Le pion ne revient pas — c'est un VRAI gambit. Tu joues pour l'initiative pure."],"moves":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","O-O","c3","d5!!","exd5","Nxd5","Nxe5","Nxe5","Rxe5","c6!"],"notes":{"9":"<b>Be7</b> — Tu suis la ligne principale de l'Espagnole...","13":"<b>O-O</b> — Roi en sécurité : la condition ABSOLUE avant tout sacrifice.","14":"<b>c3</b> — Les Blancs préparent d4 — le plan normal. Trop lent !","15":"<b>d5!!</b> — LE gambit Marshall. Tu offres le pion e5 pour ouvrir le centre immédiatement.","17":"<b>Nxd5</b> — Le cavalier arrive au centre.","18":"<b>Nxe5</b> — Les Blancs prennent le second pion — ils doivent accepter, sinon tu es juste mieux.","21":"<b>c6!</b> — Le coup discret et essentiel : il solidifie le Cd5 et libère la diagonale d8-h4 pour ta dame. La suite : ...Fd6! attaque la tour, puis ...Dh4 avec une attaque écrasante. Un pion de moins, une initiative éternelle."},"traps":[],"goal":"Un pion contre une attaque permanente sur le roi.","src":"hunter"},{"id":"o-grunfeld","kind":"opening","tier":5,"side":"b","name":"Défense Grünfeld","sub":"L'hypermodernisme absolu","eco":"D85","fam":"d4 Cf6","lvl":"Maîtrise","stats":[["Code ECO","D85"],["Famille","d4 Cf6"],["Vous jouez","les Noirs"],["Longueur","16 demi-coups"]],"idea":"Le comble de l'idée hypermoderne : tu laisses les Blancs construire un centre de pions gigantesque... parce qu'un grand centre est surtout une grande CIBLE. Ton fou g7 et tes coups ...c5/...Cc6 le pilonnent jusqu'à l'effondrement.","plans":{},"keys":["Tu échanges volontairement ton Cd5 contre le Cc3 : les Blancs ont un centre e4-d4 énorme.","Mais ce centre est une cible : ...c5!, ...Fg7, ...Cc6, ...Fg4 tapent tous dessus.","Si le centre blanc tient, les Blancs gagnent. S'il craque, tu gagnes. Zéro compromis.","Tb1 (ou Fe3/Fc4) est le plan blanc pour soutenir le centre : la bataille est là."],"moves":["d4","Nf6","c4","g6","Nc3","d5!","cxd5","Nxd5","e4","Nxc3","bxc3","Bg7","Nf3","c5!","Rb1","O-O"],"notes":{"3":"<b>g6</b> — Tu prépares le fianchetto.","5":"<b>d5!</b> — LA Grünfeld (au lieu de ...Fg7 est-indien). Tu frappes le centre immédiatement.","7":"<b>Nxd5</b> — Le cavalier occupe le centre temporairement.","8":"<b>e4</b> — Les Blancs chassent ton cavalier et construisent le grand centre.","9":"<b>Nxc3</b> — Tu échanges — c'est volontaire : le pion c3 sera une faiblesse.","10":"<b>bxc3</b> — Le centre blanc de rêve : c3-d4-e4. Impressionnant... et fragile.","11":"<b>Bg7</b> — Ton fou vise d4 et la grande diagonale : le centre blanc est déjà sous tension.","13":"<b>c5!</b> — Le coup thématique. Tu frappes la base du centre. Chaque coup noir tape sur d4.","14":"<b>Rb1</b> — Le plan moderne : la tour quitte la diagonale du fou g7 et prépare une pression sur b7.","15":"<b>O-O</b> — Roi en sécurité. La bataille est simple à formuler : son centre tient-il, oui ou non ? Tout le reste en découle."},"traps":[],"goal":"Le grand centre blanc comme cible — bataille dynamique totale.","src":"hunter"},{"id":"e-k2r","kind":"endgame","tier":1,"side":"w","name":"Mat de l'escalier (deux tours)","sub":"Matez en escalier : le mat le plus simple de tous.","cat":"Mats élémentaires","fen":"8/8/8/4k3/8/8/8/R3K2R w - - 0 1","goal":"mate","stats":[["Catégorie","Mats élémentaires"],["Objectif","Mater"],["Vous jouez","les Blancs"],["Difficulté","★"]],"idea":"Matez en escalier : le mat le plus simple de tous.","theory":"<p>Le mat le plus facile de l'échiquier — <b>le roi ne sert à rien</b>, les deux tours font tout.</p> <p><b>Le principe de l'escalier.</b> Une tour coupe le roi sur une rangée, l'autre lui fait échec sur la rangée juste au-dessus. Le roi doit reculer d'une rangée. Alors la première tour lui refait échec un cran plus haut. Les deux tours montent en alternance, comme quelqu'un qui monte un escalier, et le roi est balayé jusqu'au bord.</p> <p><b>Le seul détail à gérer</b> : quand le roi noir s'approche de la tour qui fait échec, ne paniquez pas — envoyez cette tour <em>tout au bout</em> de sa rangée, le plus loin possible. Elle continue de faire son travail à distance et le roi ne peut plus l'attraper. C'est le coup qui trompe tous les débutants.</p> <p>Cette technique se transpose telle quelle en <b>dame + tour</b>, encore plus rapide.</p>","steps":["Tour A : échec sur la rangée du roi.","Le roi recule d'une rangée.","Tour B : échec sur la nouvelle rangée.","Si le roi approche d'une tour : l'envoyer à l'autre bout.","Répéter jusqu'au bord = mat."],"fixnote":"","src":"github"},{"id":"e-kq","kind":"endgame","tier":1,"side":"w","name":"Roi + Dame contre Roi","sub":"Matez le roi noir. Attention au pat !","cat":"Mats élémentaires","fen":"8/8/8/4k3/8/8/8/3QK3 w - - 0 1","goal":"mate","stats":[["Catégorie","Mats élémentaires"],["Objectif","Mater"],["Vous jouez","les Blancs"],["Difficulté","★"]],"idea":"Matez le roi noir. Attention au pat !","theory":"<p>C'est la première technique à maîtriser : sans elle, vous annulerez des parties gagnées.</p> <p><b>La méthode du carré qui rétrécit.</b> La dame seule ne mate pas : elle enferme, le roi mate. Placez la dame <em>à saut de cavalier</em> du roi adverse (comme si un cavalier reliait les deux). Cette distance est magique : elle contrôle un maximum de cases <em>sans jamais faire pat</em>. À chaque coup du roi noir, reprenez cette distance de cavalier. Le roi noir est poussé mécaniquement vers le bord.</p> <p>Quand il est collé au bord, <b>arrêtez de bouger la dame</b> et amenez votre roi. Le mat vient quand votre roi est en face (ou en soutien) et que la dame se pose au contact.</p> <p class='ko'><b>⚠ Le piège du pat.</b> Si le roi noir est au bord et n'a plus de coup, ce n'est pas un mat mais une <em>nulle</em>. Avant chaque coup de dame, posez-vous la question : « après ça, l'adversaire a-t-il encore un coup ? » Le réflexe qui sauve : ne jamais mettre la dame au contact du roi tant que votre propre roi ne la défend pas.</p>","steps":["Dame à distance de cavalier du roi adverse.","Répéter à chaque coup : le roi adverse recule vers le bord.","Bloquer le roi sur une bande de bord (sans le mettre pat).","Amener SON roi en opposition.","Mat au contact avec la dame protégée."],"fixnote":"","src":"github"},{"id":"e-kr","kind":"endgame","tier":1,"side":"w","name":"Roi + Tour contre Roi","sub":"Matez avec la tour. Il faut la coopération du roi.","cat":"Mats élémentaires","fen":"8/8/8/4k3/8/8/8/R3K3 w - - 0 1","goal":"mate","stats":[["Catégorie","Mats élémentaires"],["Objectif","Mater"],["Vous jouez","les Blancs"],["Difficulté","★"]],"idea":"Matez avec la tour. Il faut la coopération du roi.","theory":"<p>Plus difficile que la dame : la tour ne peut pas faire le travail seule, le roi est <em>obligatoire</em>.</p> <p><b>1. La barrière.</b> Posez la tour sur une ligne (rangée ou colonne) qui coupe le roi adverse d'une partie de l'échiquier. Il est désormais prisonnier d'une boîte.</p> <p><b>2. L'opposition.</b> Amenez votre roi face au sien, séparés d'une case (les deux rois en vis-à-vis, une case entre eux). Celui qui doit jouer perd du terrain : c'est le <em>zugzwang</em>, l'obligation de bouger.</p> <p><b>3. Rétrécir.</b> Quand vous avez l'opposition, la tour avance d'un cran : la boîte se réduit d'une rangée. Le roi noir doit reculer. On recommence.</p> <p><b>4. Le mat.</b> Le roi noir sur la dernière rangée, votre roi en opposition juste en face, la tour arrive sur la rangée du bord : mat.</p> <p>Le coup de finesse à connaître : le <em>coup d'attente</em>. Quand le roi noir refuse de se mettre en opposition, jouez un coup neutre de tour sur sa ligne (par exemple Ta1-b1) et il devra bouger le premier.</p>","steps":["Tour : couper le roi (barrière).","Roi : marcher jusqu'à l'opposition.","Tour : avancer d'une rangée (la boîte rétrécit).","Coup d'attente de tour si le roi esquive.","Mat sur la dernière rangée."],"fixnote":"","src":"github"},{"id":"e-opp","kind":"endgame","tier":2,"side":"w","name":"L'opposition (roi + pion)","sub":"Promouvez le pion. Indice : le roi doit passer DEVANT le pion.","cat":"Finales de pions","fen":"8/8/3k4/8/8/3K4/4P3/8 w - - 0 1","goal":"promo","stats":[["Catégorie","Finales de pions"],["Objectif","Promouvoir"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"Promouvez le pion. Indice : le roi doit passer DEVANT le pion.","theory":"<p>La finale la plus importante des échecs. Tout se résume à un concept : <b>l'opposition</b>.</p> <p><b>Définition.</b> Les deux rois se font face, séparés par une case (une, trois ou cinq — toujours un nombre impair). Celui <em>qui doit jouer</em> perd : il est obligé de céder le passage. Avoir l'opposition = obliger l'autre à bouger en premier.</p> <p><b>La règle d'or.</b> <em>Le roi devant, le pion derrière.</em> Poussez le roi en avant du pion, jamais le pion en premier. Un pion qui court seul est toujours rattrapé.</p> <p><b>Les cases clés.</b> Pour un pion sur la 5e rangée ou moins, les cases clés sont les trois cases situées <em>deux rangées devant lui</em>. Si votre roi atteint une case clé, <b>la promotion est garantie</b>, quoi que fasse l'adversaire. Pour un pion en e2 : les cases clés sont d4, e4 et f4… puis d6/e6/f6 en remontant.</p> <p class='ko'><b>Le piège classique.</b> Ici, <em>1.e4?? est une erreur</em> : le pion se met devant son roi et la position est nulle. Il faut jouer <b>1.Rd4! ou 1.Rf4!</b> (prendre l'opposition en diagonale) et n'avancer le pion qu'ensuite. Le pion est le dernier à bouger, toujours.</p>","steps":["Ne PAS pousser le pion en premier.","Amener le roi devant le pion.","Prendre l'opposition (une case entre les rois, à l'adversaire de jouer).","Atteindre une case clé (2 rangées devant le pion).","Le pion suit et promeut."],"fixnote":"Position corrigée : l'ancienne (Re3/e2 contre Re5) était objectivement NULLE. Ici le gain existe, et seuls les coups de roi le conservent.","src":"github"},{"id":"e-percee","kind":"endgame","tier":2,"side":"w","name":"La percée","sub":"3 pions contre 3 — le sacrifice qui crée une dame","cat":"Finales de pions","fen":"8/ppp5/8/PPP5/8/8/8/k6K w - - 0 1","goal":"line","stats":[["Catégorie","Finales de pions"],["Objectif","Rejouer la technique"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"Une des plus belles ressources des finales : trois pions face à trois pions, apparemment bloqués. Deux sacrifices créent un pion passé imparable. Ce motif décide des parties entières et presque personne ne le voit.","keys":["Condition : tes pions sont plus AVANCÉS que les siens (ici sur la 5e rangée).","Le sacrifice part TOUJOURS du pion du MILIEU : b6!","Règle d'or : on enchaîne ensuite du côté OPPOSÉ à celui qui a capturé.","Résultat : ton pion extérieur file à dame et le roi est trop loin."],"theory":"","steps":[],"moves":["b6!!","cxb6","a6!","bxa6","c6"],"notes":{"0":"<b>b6!!</b> — Le sacrifice clé, toujours par le pion du milieu. Deux prises sont possibles — ta réponse change selon le côté.","1":"<b>cxb6</b> — Il prend du côté c. Retiens : il faut donc pousser le pion du côté OPPOSÉ.","2":"<b>a6!</b> — Second sacrifice, du côté opposé à sa capture. S'il prend, le pion c file ; s'il refuse, axb7 fait dame.","3":"<b>bxa6</b> — Forcé.","4":"<b>c6</b> — Le pion c court et rien ne l'arrête : plus un seul pion noir sur sa route, et le roi est à l'autre bout de l'échiquier. Dame dans deux coups."},"goaltxt":"Créer un pion passé imparable à partir de rien.","trap":"S'il joue 1...axb6 à la place, la réponse SYMÉTRIQUE est 2.c6! bxc6 3.a6 et c'est le pion a qui passe. Même règle : toujours du côté opposé à sa capture.","src":"hunter"},{"id":"e-carre","kind":"endgame","tier":2,"side":"w","name":"La règle du carré","sub":"Le roi noir peut-il rattraper le pion a ? Comptez, puis poussez.","cat":"Finales de pions","fen":"8/8/8/8/7k/8/P7/6K1 w - - 0 1","goal":"promo","stats":[["Catégorie","Finales de pions"],["Objectif","Promouvoir"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"Le roi noir peut-il rattraper le pion a ? Comptez, puis poussez.","theory":"<p>Une astuce de calcul mental qui vous évite de compter les coups un par un.</p> <p><b>La règle.</b> Tracez le carré dont un côté va du pion jusqu'à sa case de promotion. Prolongez ce carré latéralement vers le roi adverse. <b>Si le roi adverse est dans le carré (ou peut y entrer au trait), il rattrape le pion. Sinon, le pion promeut.</b></p> <p><b>Le détail qui compte.</b> Si le pion est encore sur sa case de départ (2e rangée), il peut avancer de deux cases : comptez le carré <em>à partir de la 3e rangée</em>. Ici, le pion a2 avance en a4 : le carré est donc a4-d4-d8-a8. Le roi noir est en h4 : très loin du compte. Le pion passe.</p> <p><b>L'usage réel.</b> Cette règle décide des finales : « est-ce que j'échange les dernières pièces ? » Si le carré dit oui, vous foncez en finale de pions gagnée. Elle sert aussi à savoir si vous pouvez vous permettre d'aller croquer un pion à l'autre bout.</p> <p class='ko'>Attention : la règle suppose que le chemin du pion est libre et que rien ne gêne le roi. Un de vos propres pions sur le passage, et le calcul change.</p>","steps":["Repérer la case de promotion du pion.","Tracer le carré (côté = distance pion → promotion).","Le roi adverse est-il dedans ? Non → poussez !","Ne jamais dévier : le pion court tout droit."],"fixnote":"","src":"github"},{"id":"e-mauvaisfou","kind":"endgame","tier":2,"side":"w","name":"Le mauvais fou (nulle à connaître)","sub":"Blancs : fou + pion contre roi nu… et c'est NULLE. Comprenez pourquoi.","cat":"Finales de pièces","fen":"7k/8/5K1P/4B3/8/8/8/8 w - - 0 1","goal":"draw-lesson","stats":[["Catégorie","Finales de pièces"],["Objectif","Comprendre la nulle"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"Blancs : fou + pion contre roi nu… et c'est NULLE. Comprenez pourquoi.","theory":"<p>Une des rares positions où une pièce et un pion de plus ne gagnent pas. À connaître dans les deux sens : pour ne pas y foncer, et pour s'y réfugier quand on est perdu.</p> <p><b>La condition de nulle</b> : (1) le pion est un pion de <em>tour</em> (colonne a ou h), (2) la case de promotion <em>n'est pas de la couleur du fou</em>, (3) le roi adverse atteint le coin.</p> <p>Ici : le pion h promeut en <b>h8, une case claire</b>. Le fou est <b>sur cases sombres</b>. Il ne pourra donc <em>jamais</em> contrôler h8, ni chasser le roi noir du coin. Le roi noir s'assoit en h8 et ne bouge plus. Si les Blancs poussent h7, c'est <em>pat</em>. S'ils n'avancent pas, il ne se passe rien. Nulle.</p> <p><b>Les conséquences pratiques.</b></p> <ul><li>En attaque : si vous avez cette structure, <em>n'échangez pas</em> vos autres pions — cherchez à garder un deuxième pion, il suffit à gagner.</li> <li>En défense : quand vous êtes perdu avec un fou de la mauvaise couleur en face, <b>courez au coin</b>. C'est une bouée de sauvetage réelle, elle a sauvé des milliers de parties de tournoi.</li></ul> <p class='ok'>Corollaire à retenir : <em>tous les échanges ne se valent pas</em>. Échanger jusqu'à cette position, c'est transformer une victoire en demi-point.</p>","steps":["Identifier la couleur de la case de promotion.","Comparer à la couleur du fou.","Si différente + pion de tour : le roi défenseur court au coin.","Le coin est une forteresse : nulle."],"fixnote":"","src":"github"},{"id":"e-cases-cles","kind":"endgame","tier":2,"side":"w","name":"Les cases clés","sub":"Le roi sur la 6e = gain automatique","cat":"Finales de pions","fen":"4k3/8/4K3/4P3/8/8/8/8 w - - 0 1","goal":"line","stats":[["Catégorie","Finales de pions"],["Objectif","Rejouer la technique"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"La règle qui transforme les finales de pions en science exacte : si ton roi atteint la 6e rangée DEVANT son pion, avec le pion derrière lui, c'est gagné quel que soit le trait. Plus besoin de calculer l'opposition : tu vises la case clé.","keys":["Pour un pion sur la 5e, les cases clés sont d6, e6, f6 (la 6e rangée devant lui).","Roi sur une case clé = gain automatique, quel que soit celui qui joue.","Corollaire défensif : ton adversaire doit t'EMPÊCHER d'y arriver, sinon il est perdu.","Piège mortel : pousser le pion en e7 avec le roi en e6 = PAT. Le roi doit d'abord aller sur le côté."],"theory":"","steps":[],"moves":["Kf6!","Kd8","Kf7!","Kc7","e6","Kd8","e7+","Kc7","e8=Q"],"notes":{"0":"<b>Kf6!</b> — Le roi contourne par le côté. NE JOUE PAS e6? qui laisse filer le gain, ni ne fonce vers le pat.","2":"<b>Kf7!</b> — Le roi prend le contrôle de e8, la case de promotion. C'est le roi qui ouvre la route.","4":"<b>e6</b> — Le pion avance enfin, entièrement escorté.","6":"<b>e7+</b> — Échec ! Le roi noir doit s'écarter — et surtout, ce n'est PAS pat : le roi blanc est en f7, pas en e6.","8":"<b>e8=Q</b> — Dame. Toute la technique tient en une phrase : le roi d'abord, le pion ensuite."},"goaltxt":"Gain forcé — vérifié par solveur exact.","trap":"","src":"hunter"},{"id":"e-2b","kind":"endgame","tier":2,"side":"w","name":"Mat des deux fous","sub":"Matez avec les deux fous. Il faut chasser le roi dans un COIN.","cat":"Mats élémentaires","fen":"8/8/8/4k3/8/8/8/2B1KB2 w - - 0 1","goal":"mate","stats":[["Catégorie","Mats élémentaires"],["Objectif","Mater"],["Vous jouez","les Blancs"],["Difficulté","★★"]],"idea":"Matez avec les deux fous. Il faut chasser le roi dans un COIN.","theory":"<p>Le mat le plus difficile parmi les « faciles ». Il faut environ 15-18 coups et il y a la règle des 50 coups qui court.</p> <p><b>Trois principes.</b></p> <ul><li><b>Les fous côte à côte.</b> Deux fous placés sur des cases adjacentes en diagonale forment un mur infranchissable de cases contrôlées. Le roi adverse ne peut pas passer au travers.</li> <li><b>Le roi est un partenaire à part entière.</b> Contrairement au mat de la dame, il doit venir juste en face du roi adverse.</li> <li><b>Le mat est <em>dans un coin</em>, n'importe lequel.</b> Contrairement au mat fou+cavalier (où le coin doit être de la couleur du fou), ici tous les coins fonctionnent.</li></ul> <p><b>La méthode.</b> Formez le mur de fous, avancez-le rangée par rangée en gardant les deux fous côte à côte, le roi suit et pousse. Le roi adverse recule inexorablement dans un coin. Le mat final : le roi adverse au coin, votre roi en opposition à saut de cavalier, un fou tient la case de fuite, l'autre donne l'échec.</p> <p class='ko'>Vigilance pat : dans le coin, le roi adverse a très peu de cases. Comptez avant de jouer.</p>","steps":["Fous côte à côte au centre = mur.","Avancer le mur, le roi suit.","Pousser le roi adverse vers un coin (n'importe lequel).","Roi en opposition, un fou coupe la fuite, l'autre mate."],"fixnote":"","src":"github"},{"id":"e-reti","kind":"endgame","tier":3,"side":"w","name":"L'étude de Réti (le chef-d'œuvre)","sub":"Position perdue ? Sauvez la nulle. Le roi blanc semble à des kilomètres.","cat":"Finales de pions","fen":"7K/8/k1P5/7p/8/8/8/8 w - - 0 1","goal":"draw","stats":[["Catégorie","Finales de pions"],["Objectif","Annuler"],["Vous jouez","les Blancs"],["Difficulté","★★★"]],"idea":"Position perdue ? Sauvez la nulle. Le roi blanc semble à des kilomètres.","theory":"<p>L'étude la plus célèbre de l'histoire (Richard Réti, 1921). Elle paraît absurde : le roi blanc en h8 ne peut <em>évidemment</em> pas rattraper le pion h5, et le pion c6 sera arrêté par le roi noir. Pourtant, c'est nulle.</p> <p><b>Le secret : la géométrie des échecs n'est pas celle du monde réel.</b> Pour un roi, aller de h8 à b8 coûte 6 coups… mais aller de h8 à b8 <em>en passant par g7, f6, e5, d6, c7</em> coûte aussi 6 coups. La diagonale est aussi rapide que la ligne droite. Le roi peut donc courir vers <b>deux objectifs à la fois</b>.</p> <p><b>La solution : 1.Rg7! h4 2.Rf6! Rb6 3.Re5!</b> — et maintenant la double menace éclate :</p> <ul><li>Si 3…h3, alors 4.Rd6! et le pion c passe en dame (le roi noir a perdu le contact).</li> <li>Si 3…Rxc6, alors 4.Rf4! et le roi blanc est <em>rentré dans le carré</em> du pion h : il le rattrape.</li></ul> <p>Le roi ne poursuit pas un but, il en poursuit deux — et il ne peut pas être puni pour les deux.</p> <p class='ok'><b>La leçon à retenir</b> : quand une course de pions semble perdue, cherchez la <em>diagonale à double usage</em>. Le roi est une pièce beaucoup plus rapide qu'il n'en a l'air.</p>","steps":["1.Rg7! — la diagonale vers les deux buts.","2.Rf6! — on menace toujours les deux.","3.Re5! — le point de bifurcation.","3…h3 4.Rd6! (le pion c passe) / 3…Rxc6 4.Rf4! (on rentre dans le carré)."],"fixnote":"","src":"github"},{"id":"e-lucena","kind":"endgame","tier":3,"side":"w","name":"La position de Lucena (le pont)","sub":"Le pion est en c7, le roi devant. Comment gagner malgré les échecs de la tour noire ?","cat":"Finales de tours","fen":"2K5/2P1k3/8/8/8/8/r7/3R4 w - - 0 1","goal":"promo","stats":[["Catégorie","Finales de tours"],["Objectif","Promouvoir"],["Vous jouez","les Blancs"],["Difficulté","★★★"]],"idea":"Le pion est en c7, le roi devant. Comment gagner malgré les échecs de la tour noire ?","theory":"<p><b>La position la plus importante de toutes les finales</b>, parce que les finales de tours sont la moitié des finales de tournoi. Sachez ça et vous gagnerez des points toute votre vie.</p> <p><b>Le problème.</b> Le pion c7 veut promouvoir, mais le roi blanc lui bouche la case c8. Dès qu'il s'écarte, la tour noire vient le mitrailler d'échecs par derrière et le roi ne peut jamais se poser.</p> <p><b>La solution : construire un pont.</b></p> <ul><li><b>1.Td4!!</b> — le coup étrange. La tour se pose sur la <em>4e rangée</em>, apparemment sans raison.</li> <li><b>1…Ta1 2.Rb7 Tb1+ 3.Rc6 Tc1+ 4.Rd5!</b> — le roi marche vers les échecs (il n'a pas peur, il se rapproche de sa tour).</li> <li><b>4…Td1+ 5.Td4!</b> — <em>et voilà le pont</em>. La tour s'interpose et bloque le dernier échec. Elle est protégée par le roi d5. Les échecs sont finis, le pion passe.</li></ul> <p>La tour en d4 avait été placée là <em>exactement</em> pour ce moment, quatre coups à l'avance. C'est pour ça qu'on l'appelle « construire le pont » : on pose la poutre avant de traverser.</p> <p><b>Les deux conditions</b> pour que Lucena marche : (1) le pion est sur la 7e, (2) votre roi est devant lui, (3) le roi adverse est coupé d'au moins une colonne par votre tour. Réunies : gain forcé.</p>","steps":["1.Td4! — poser la poutre du pont sur la 4e rangée.","Marcher le roi VERS les échecs (b7, c6, d5).","À l'échec final : Td4! interpose la tour, protégée par le roi.","Le pion promeut."],"fixnote":"","src":"github"},{"id":"e-philidor","kind":"endgame","tier":3,"side":"b","name":"La position de Philidor (la défense)","sub":"Les Noirs jouent et annulent. Un seul coup sauve : lequel ?","cat":"Finales de tours","fen":"4k3/8/8/4K3/4P3/8/8/r6R b - - 0 1","goal":"draw","stats":[["Catégorie","Finales de tours"],["Objectif","Annuler"],["Vous jouez","les Noirs"],["Difficulté","★★★"]],"idea":"Les Noirs jouent et annulent. Un seul coup sauve : lequel ?","theory":"<p>Le pendant défensif de Lucena. Si Lucena vous fait gagner, <b>Philidor vous fait annuler</b> — et il sauve encore plus de points.</p> <p><b>La règle de la 3e rangée.</b> Tant que le pion adverse n'est pas encore arrivé sur la 6e rangée, mettez votre tour sur <em>votre 3e rangée</em> (la 6e rangée vue des Blancs). Ici : <b>1…Ta6!</b> C'est le seul coup.</p> <p><b>Pourquoi ça marche.</b> La tour en a6 interdit au roi blanc d'entrer sur la 6e rangée. Or, sans son roi devant le pion, les Blancs ne peuvent rien construire. Ils sont bloqués. Ils n'ont qu'un moyen de progresser : pousser le pion en e6.</p> <p><b>Le deuxième temps.</b> Dès que le pion arrive en e6, votre tour part <em>tout au fond</em> : <b>…Ta1!</b> (ou n'importe où sur la 1re rangée). Et maintenant, le roi blanc n'a plus d'abri contre les échecs par derrière : le pion e6 lui bouche lui-même les cases. Échec perpétuel de la tour, <em>nulle</em>.</p> <p class='ko'><b>L'erreur fatale</b> : jouer …Tb1 tout de suite (avant que le pion soit en 6e). Le roi blanc monte alors en e6, et vous êtes dans une position de Lucena perdue. <em>Le timing est tout : 3e rangée d'abord, dernière rangée quand le pion arrive.</em></p>","steps":["Tour sur sa 3e rangée (ici : 1…Ta6!) tant que le pion n'est pas en 6e.","Attendre. Le roi blanc ne peut pas entrer.","Quand le pion arrive en 6e : tour tout au fond (…Ta1!).","Échecs perpétuels par derrière = nulle."],"fixnote":"","src":"github"},{"id":"e-tour-derriere","kind":"endgame","tier":4,"side":"w","name":"Règle de Tarrasch","sub":"La tour va DERRIÈRE le pion passé","cat":"Finales de tours","fen":"2r3k1/8/8/8/P7/8/6K1/7R w - - 0 1","goal":"line","stats":[["Catégorie","Finales de tours"],["Objectif","Rejouer la technique"],["Vous jouez","les Blancs"],["Difficulté","★★★★"]],"idea":"La règle la plus utile des finales de tours, énoncée par Tarrasch : « la tour se place toujours derrière le pion passé » — le tien comme celui de l'adversaire. La raison est géométrique : la tour derrière GAGNE des cases quand le pion avance, la tour devant en PERD.","keys":["Ta tour derrière TON pion : elle le pousse et gagne en liberté à chaque avance.","Ta tour derrière SON pion : elle le bloque et son rayon d'action augmente à mesure qu'il avance.","La tour devant le pion est passive : elle rétrécit à chaque pas. C'est l'erreur classique.","Corollaire : le ROI défenseur doit se placer devant le pion, jamais la tour."],"theory":"","steps":[],"moves":["Ra1!","Ra8","a5","Kf7","a6","Ke7","Kf3","Kd7","Ke4","Kc7","Kd5","Kb8","Kc6"],"notes":{"0":"<b>Ra1!</b> — La tour se place DERRIÈRE le pion. Elle le soutiendra sur toute sa course sans jamais le gêner.","1":"<b>Ra8</b> — Les Noirs sont OBLIGÉS de bloquer devant le pion — leur tour devient totalement passive. Compare les deux tours : tout est là.","2":"<b>a5</b> — Le pion avance et la tour a1 garde toute sa mobilité.","4":"<b>a6</b> — À chaque pas, ta tour reste active et la sienne est de plus en plus prisonnière.","6":"<b>Kf3</b> — Le roi vient aider : les finales de tours se gagnent avec le roi actif.","10":"<b>Kd5</b> — Le roi arrive à la rescousse du pion, pendant que la tour noire reste clouée à la case a8.","12":"<b>Kc6</b> — Position gagnante : le roi soutient le pion, la tour a1 a tout fait depuis l'arrière. La tour noire n'a jamais joué le moindre rôle."},"goaltxt":"Intégrer un réflexe permanent : tour DERRIÈRE le pion passé.","trap":"","src":"hunter"},{"id":"t-t4","kind":"tactic","tier":1,"side":"w","name":"La fourchette (famille)","sub":"","fen":"r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1","sol":["Nc7+"],"mate":false,"hint":"","text":"<b>La fourchette de cavalier</b> : une seule pièce attaque deux cibles à la fois. Comme le roi doit obligatoirement répondre à l'échec, l'autre pièce est perdue.<br><br>Ici <code>Cc7+</code> attaque le roi e8 <em>et</em> la tour a8. Quand la fourchette touche le roi et la dame, on l'appelle la <b>fourchette royale</b> ; quand elle touche roi + dame + tour, c'est la <b>fourchette familiale</b>.<br><br><em>Pourquoi le cavalier ?</em> Parce qu'il est la seule pièce qui attaque sans être sur la ligne de sa cible : on ne peut ni s'interposer, ni le bloquer. La seule parade est de le prendre ou de bouger.<br><br><b>Le réflexe à installer</b> : à chaque coup de l'adversaire, regardez toutes les cases où un cavalier pourrait sauter en touchant deux de vos pièces. La grande majorité des pièces perdues en dessous de 1600 Elo le sont sur une fourchette de cavalier non vue.","stats":[["Motif","La fourchette (famille)"],["Type","Gain de matériel"],["Solution","1 coup"],["Difficulté","★"]],"fixnote":"","src":"github"},{"id":"t-t7","kind":"tactic","tier":1,"side":"w","name":"Le clouage absolu","sub":"","fen":"4k3/8/2n5/1B6/3P4/8/8/4K3 w - - 0 1","sol":["d5"],"mate":false,"hint":"","text":"<b>Le clouage absolu</b> : le fou b5 tient la diagonale b5-c6-d7-e8. Le cavalier c6 ne peut <em>légalement pas</em> bouger, puisque cela exposerait son roi — c'est un clouage absolu (par opposition au clouage relatif, où la pièce derrière est simplement une pièce de valeur).<br><br><b>La technique universelle</b> : une pièce clouée est un objet immobile. Ne la prenez pas tout de suite — <em>attaquez-la une fois de plus</em>, de préférence avec un pion (la pièce la moins chère). Ici <code>d5!</code> et le cavalier est attaqué deux fois, défendu zéro fois, et incapable de fuir.<br><br>C'est exactement l'idée derrière l'Espagnole (Fb5) et derrière tous les Fg5 qui clouent un cavalier f6 : <em>on cloue, puis on empile.</em>","stats":[["Motif","Le clouage absolu"],["Type","Gain de matériel"],["Solution","1 coup"],["Difficulté","★"]],"fixnote":"","src":"github"},{"id":"t-t1","kind":"tactic","tier":1,"side":"w","name":"Mat du couloir","sub":"Le roi noir est enfermé par ses propres pions.","fen":"6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1","sol":["Ra8#"],"mate":true,"hint":"Le roi noir est enfermé par ses propres pions.","text":"<b>Mat du couloir</b> (ou mat du corridor) : le roi est étouffé par sa propre rangée de pions, et une tour ou une dame le balaie sur la dernière rangée. <em>C'est la tactique la plus fréquente de tous les échecs.</em><br><br>La prophylaxie : jouez <code>h6</code> ou <code>g6</code> à un moment tranquille pour offrir une « case d'air » à votre roi. Réciproquement, dès que l'adversaire a ses trois pions intacts devant son roi et que sa dernière rangée n'est plus défendue, <b>regardez le couloir</b> : des dizaines de combinaisons (déviations, sacrifices de dame) n'ont pas d'autre but que de vider cette rangée.","stats":[["Motif","Mat du couloir"],["Type","Mat forcé"],["Solution","1 coup"],["Difficulté","★"]],"fixnote":"","src":"github"},{"id":"t-t6","kind":"tactic","tier":2,"side":"w","name":"L'attraction (attirer le roi)","sub":"Une pièce défend l'autre sur la grande diagonale.","fen":"7k/6pp/8/4Q3/8/8/1B6/6K1 w - - 0 1","sol":["Qxg7#"],"mate":true,"hint":"Une pièce défend l'autre sur la grande diagonale.","text":"<b>Le sacrifice qui n'en est pas un</b> : <code>Dxg7#</code> semble donner la dame, mais le fou b2 la défend à travers la grande diagonale a1-h8 (qui se libère au moment même où la dame quitte e5).<br><br>C'est le motif <b>dame + fou sur la grande diagonale</b> — probablement la batterie la plus meurtrière du jeu. Elle apparaît dans le fianchetto (Fg2/Fb2), dans l'attaque contre le roque, dans la Sicilienne, partout.<br><br><em>Le réflexe :</em> chaque fois que votre fou tient une grande diagonale pointée sur le roque adverse, cherchez ce qui bouche le chemin — c'est presque toujours <b>là</b> qu'est le sacrifice. Un cavalier en f6 ? Un pion en g7 ? Trouvez le moyen de le faire disparaître, avec une dame qui suit derrière.","stats":[["Motif","L'attraction (attirer le roi)"],["Type","Mat forcé"],["Solution","1 coup"],["Difficulté","★★"]],"fixnote":"","src":"github"},{"id":"t-t5","kind":"tactic","tier":2,"side":"w","name":"L'enfilade (rayon X)","sub":"","fen":"q7/1k6/8/8/2B5/8/8/6K1 w - - 0 1","sol":["Bd5+"],"mate":false,"hint":"","text":"<b>L'enfilade</b> (ou attaque en rayon X) : le contraire exact du clouage. Dans un clouage, la pièce de <em>faible</em> valeur est devant. Dans une enfilade, c'est la pièce de <em>forte</em> valeur qui est devant — donc elle est obligée de bouger, et ce qu'elle protégeait tombe.<br><br>Ici <code>Fd5+</code> : le roi b7 est en échec sur la diagonale, il doit s'écarter, et le fou prend la dame a8.<br><br><em>Le signal :</em> deux pièces adverses alignées sur une diagonale, une colonne ou une rangée, avec la plus chère devant. Cherchez la pièce à longue portée (fou, tour, dame) qui peut se poser sur cette ligne <b>avec échec</b>. L'échec est la clé : sans lui, l'adversaire a le temps de défendre.","stats":[["Motif","L'enfilade (rayon X)"],["Type","Gain de matériel"],["Solution","1 coup"],["Difficulté","★★"]],"fixnote":"","src":"github"},{"id":"t-t8","kind":"tactic","tier":2,"side":"w","name":"L'échec à la découverte","sub":"","fen":"3k4/8/8/3N3q/8/8/8/3RK3 w - - 0 1","sol":["Nf4+"],"mate":false,"hint":"","text":"<b>L'échec à la découverte</b> : la tactique la plus violente du jeu, parce qu'elle attaque avec <em>deux pièces en un seul coup</em>.<br><br>Le cavalier d5 bouche la colonne d. Dès qu'il s'écarte, la tour d1 fait échec au roi d8. Et comme l'adversaire est <b>obligé</b> de répondre à l'échec, le cavalier peut aller se servir n'importe où en toute impunité : <code>Cf4+!</code> attrape la dame h5.<br><br><em>Le signal à chercher :</em> une de vos pièces à longue portée alignée sur le roi adverse, avec l'une de vos propres pièces au milieu. Cette pièce du milieu devient une <b>arme libre</b> — elle peut tout se permettre pendant un coup. La variante extrême est le <b>double échec</b> (les deux pièces font échec en même temps) : là, seul le déplacement du roi est possible, même prendre est interdit.","stats":[["Motif","L'échec à la découverte"],["Type","Gain de matériel"],["Solution","1 coup"],["Difficulté","★★"]],"fixnote":"","src":"github"},{"id":"t-t9","kind":"tactic","tier":2,"side":"w","name":"Mat arabe (tour + cavalier)","sub":"Le cavalier protège la case d'arrivée de la tour.","fen":"7k/R7/5N2/8/8/8/8/6K1 w - - 0 1","sol":["Rh7#"],"mate":true,"hint":"Le cavalier protège la case d'arrivée de la tour.","text":"<b>Le mat arabe</b>, le plus vieux mat référencé de l'histoire du jeu (les manuscrits arabes du IXe siècle).<br><br>La coopération est parfaite : <code>Th7#</code> semble absurde (la tour se met au contact du roi), mais <b>le cavalier f6 la défend</b>. Et ce même cavalier couvre g8. La tour, elle, balaie toute la 7e rangée, donc g7 est interdit. Le roi n'a plus une seule case.<br><br><em>Le duo tour + cavalier</em> est le plus dangereux du jeu contre un roi au coin : le cavalier couvre les cases que la tour ne peut pas atteindre (les diagonales), la tour couvre les lignes. Retenez la géométrie : <b>cavalier en f6, tour en h7, roi en h8</b>. Elle revient sans arrêt.","stats":[["Motif","Mat arabe (tour + cavalier)"],["Type","Mat forcé"],["Solution","1 coup"],["Difficulté","★★"]],"fixnote":"Position corrigée : la tour partait de h1, où elle faisait déjà échec — la position ne pouvait pas exister.","src":"github"},{"id":"t-t3","kind":"tactic","tier":2,"side":"w","name":"Mat d'Anastasie","sub":"Le cavalier tient déjà les cases de fuite. Amenez la tour.","fen":"8/4N1pk/8/8/R7/8/8/6K1 w - - 0 1","sol":["Rh4#"],"mate":true,"hint":"Le cavalier tient déjà les cases de fuite. Amenez la tour.","text":"<b>Le mat d'Anastasie</b> : la coopération cavalier + tour. Le cavalier en e7 contrôle <em>à lui seul</em> g8 et g6, les deux cases de fuite latérales. Le pion g7 bloque le roi. Il ne reste que la colonne h — la tour arrive : <code>Th4#</code>.<br><br>Dans une vraie partie, ce mat arrive presque toujours après un sacrifice pour ouvrir la colonne h : typiquement <code>Cxe7+</code> puis <code>Dxh7+!! Rxh7</code> et <code>Th3#</code>. <br><br><em>Le motif à mémoriser</em> : cavalier en e7 (ou e2 en miroir) + roi en h7 + une pièce lourde qui accède à la colonne h. Cherchez-le à chaque fois que votre cavalier atterrit en e7.","stats":[["Motif","Mat d'Anastasie"],["Type","Mat forcé"],["Solution","1 coup"],["Difficulté","★★"]],"fixnote":"","src":"github"},{"id":"t-deviation","kind":"tactic","tier":3,"side":"w","name":"La déviation","sub":"Chasser le défenseur","fen":"3rr1k1/5ppp/8/8/4Q3/8/5PPP/4R1K1 w - - 0 1","sol":[],"mate":true,"hint":"","text":"Toute pièce défendue l'est par un DÉFENSEUR. Détruis-le, dévie-le ou surcharge-le, et la cible tombe. La déviation transforme une position solide en effondrement immédiat.","keys":["Repère la pièce clé de sa DÉFENSE, pas la pièce que tu veux prendre.","Trois manières : capturer le défenseur, le dévier ailleurs, ou le SURCHARGER (deux tâches à la fois).","Une pièce qui défend deux choses est surchargée : c'est ta cible prioritaire.","Le mat du couloir naît presque toujours d'une déviation."],"moves":["Qxe8+!!","Rxe8","Rxe8#"],"notes":{"0":"<b>Qxe8+!!</b> — Sacrifice de dame ! Tu DÉVIES la tour d8 : elle est le seul défenseur du couloir.","1":"<b>Rxe8</b> — Forcé — il doit reprendre.","2":"<b>Rxe8#</b> — MAT DU COULOIR. Le roi est étouffé par ses propres pions f7-g7-h7. La dame sacrifiée a détruit le seul défenseur de la 8e rangée."},"stats":[["Motif","La déviation"],["Type","Démonstration commentée"],["Vous jouez","les Blancs"],["Difficulté","★★★"]],"goaltxt":"Mat par destruction du défenseur.","src":"hunter"},{"id":"t-t2","kind":"tactic","tier":3,"side":"w","name":"Mat étouffé (Philidor)","sub":"Un sacrifice de dame pour boucher la dernière case du roi.","fen":"5r1k/6pp/8/6N1/8/1Q6/8/6K1 w - - 0 1","sol":["Nf7+","Kg8","Nh6+","Kh8","Qg8+","Rxg8","Nf7#"],"mate":true,"hint":"Un sacrifice de dame pour boucher la dernière case du roi.","text":"<b>Le mat étouffé</b>, le plus élégant de tous. Le roi est mat par un cavalier parce que ses propres pièces l'enferment.<br><br>La mécanique est toujours la même :<br>1) <code>Cf7+</code> — échec (le cavalier est protégé par la dame b3 sur la diagonale b3-g8).<br>2) <code>Ch6+</code> — <em>double échec !</em> Le roi est obligé de bouger, il ne peut ni parer ni prendre.<br>3) <code>Dg8+!!</code> — le sacrifice de dame. Génial parce qu'il est <em>forcé</em> : la tour f8 doit prendre.<br>4) <code>Cf7#</code> — la tour a bouché elle-même la dernière case de fuite du roi. Étouffé.<br><br><em>Le signal à repérer :</em> un roi en h8 avec une tour en f8 et des pions g7/h7 intacts + votre cavalier près de g5 + votre dame sur la diagonale a2-g8. Dès que ces trois éléments sont réunis, cherchez ce mat.","stats":[["Motif","Mat étouffé (Philidor)"],["Type","Mat forcé"],["Solution","7 coups"],["Difficulté","★★★"]],"fixnote":"","src":"github"},{"id":"t-zwischenzug","kind":"tactic","tier":4,"side":"b","name":"Le zwischenzug","sub":"Le coup intermédiaire qui change tout","fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","sol":[],"mate":false,"hint":"","text":"Le motif que les joueurs de club ne voient jamais. Au lieu de reprendre « automatiquement », tu insères un coup intermédiaire AVEC MENACE. L'adversaire doit y répondre — et tu reprends ensuite avec un temps gratuit en poche.","keys":["Réflexe fatal : reprendre automatiquement. Cherche TOUJOURS mieux d'abord.","Le zwischenzug doit être plus FORT que la menace en cours : échec, attaque de dame, mat.","La question à se poser à chaque échange : « ai-je un coup plus fort AVANT de reprendre ? »","Symétrique : cherche aussi le zwischenzug de l'ADVERSAIRE. C'est là que les calculs s'écroulent."],"moves":["e4","e5","Nf3","Nc6","d4","exd4","Nxd4","Bc5","Nxc6","Qf6!!","Qd2","Qxc6"],"notes":{"4":"<b>d4</b> — L'Écossaise : les Blancs ouvrent le centre.","7":"<b>Bc5</b> — Tu développes en attaquant le cavalier d4.","8":"<b>Nxc6</b> — Les Blancs prennent ton cavalier. Le réflexe automatique serait 5...bxc6 — qui te donne des pions doublés.","9":"<b>Qf6!!</b> — LE ZWISCHENZUG. Au lieu de reprendre, tu crées DEUX menaces : Dxf2+ et Dxc6. Le cavalier c6 ne peut pas s'enfuir en défendant f2.","10":"<b>Qd2</b> — Les Blancs doivent parer — et pendant ce temps, leur cavalier reste en prise.","11":"<b>Qxc6</b> — Tu reprends la pièce MAINTENANT, avec une structure de pions intacte. Le coup intermédiaire t'a évité les pions doublés : un temps bien investi vaut souvent une pièce."},"stats":[["Motif","Le zwischenzug"],["Type","Démonstration commentée"],["Vous jouez","les Noirs"],["Difficulté","★★★★"]],"goaltxt":"Gagner un temps décisif par un coup intermédiaire.","src":"hunter"},{"id":"t-moulin","kind":"tactic","tier":5,"side":"w","name":"Le moulin","sub":"La machine à dévorer","fen":"6k1/pp3pp1/5B2/7q/8/6R1/5PPP/6K1 w - - 0 1","sol":[],"mate":false,"hint":"","text":"Le motif le plus spectaculaire du jeu (Torre–Lasker, 1925). Une tour et un fou forment une machine : échec à la découverte, la tour ramasse une pièce, retour, échec à la découverte, elle ramasse encore... Le roi est impuissant, coup après coup.","keys":["Ingrédients : un fou qui vise le roi À TRAVERS une tour, et un roi sans case de fuite.","Chaque échec à la découverte force le roi à revenir sur la même case : le cycle recommence.","La tour se sert au passage à chaque tour de moulin : c'est une rafle méthodique.","Torre a ainsi dévoré la position de Lasker, champion du monde en titre."],"moves":["Rxg7+!!","Kh8","Rxf7+","Kg8","Rg7+","Kh8","Rxb7+","Kg8","Rg7+","Kh8","Rg5+","Kh7","Rxh5"],"notes":{"0":"<b>Rxg7+!!</b> — Le moulin démarre. Le roi ne peut pas prendre : g7 est protégé par le fou f6.","1":"<b>Kh8</b> — Forcé.","2":"<b>Rxf7+</b> — ÉCHEC À LA DÉCOUVERTE : la tour s'écarte de g7 et le fou f6 frappe le roi. Un pion au passage.","3":"<b>Kg8</b> — Forcé, encore.","4":"<b>Rg7+</b> — La tour revient avec échec : le roi doit retourner en h8. Le moulin tourne.","6":"<b>Rxb7+</b> — Et la tour se sert ! Encore une pièce dévorée, toujours avec échec à la découverte.","8":"<b>Rg7+</b> — Encore un tour de moulin.","10":"<b>Rg5+</b> — Le moulin s'arrête : la tour revient avec échec à la découverte et se place en g5...","12":"<b>Rxh5</b> — ...où elle ramasse la DAME. Le roi noir n'a pas pu faire un seul coup utile de toute la séquence."},"stats":[["Motif","Le moulin"],["Type","Démonstration commentée"],["Vous jouez","les Blancs"],["Difficulté","★★★★★"]],"goaltxt":"Rafle méthodique par échecs à la découverte.","src":"hunter"}],"principles":[{"t":"Les 3 règles de l'ouverture","c":"<p>Tout le début de partie tient en trois phrases. Si vous ne retenez que ça, vous jouerez déjà mieux que la majorité des joueurs de club.</p><ul><li><b>1. Occupez le centre.</b> Une pièce au centre contrôle plus de cases : un cavalier en e5 vise 8 cases, en a1 il en vise 2. Poussez <em>un</em> pion central (e4 ou d4), rarement les deux d'un coup.</li><li><b>2. Développez toutes vos pièces, une seule fois chacune.</b> Cavaliers d'abord (ils savent où aller), fous ensuite. Ne rejouez pas la même pièce deux fois dans l'ouverture sans raison impérieuse : chaque temps perdu est une pièce adverse qui sort à votre place.</li><li><b>3. Roquez tôt.</b> Avant le 10e coup, presque toujours. Le roi est en sécurité <em>et</em> la tour rejoint le centre. Deux bénéfices pour un coup.</li></ul><p class='ko'><b>Le corollaire :</b> ne sortez pas la dame tôt. Elle se fait chasser par des pièces mineures, et chaque fois qu'elle fuit, l'adversaire développe gratuitement. Une dame sortie au 3e coup, c'est trois temps offerts.</p>"},{"t":"La valeur des pièces (et pourquoi elle ment)","c":"<p>Le barème classique : <em>pion = 1, cavalier = 3, fou = 3, tour = 5, dame = 9</em>. Le roi n'a pas de valeur (il est le jeu lui-même), mais il vaut environ 4 en attaque, en finale.</p><p><b>Ce que le barème ne dit pas :</b></p><ul><li><b>La paire de fous vaut plus que la somme des fous.</b> Deux fous couvrent les deux couleurs de cases : ensemble, ils valent environ un demi-pion de plus que fou + cavalier. Bobby Fischer gagnait des finales entières avec ça.</li><li><b>Le fou aime les positions ouvertes, le cavalier les positions fermées.</b> Dans une position bloquée, un cavalier vaut nettement plus qu'un fou coincé derrière ses pions. Regardez la structure avant d'échanger.</li><li><b>Une tour ne vaut rien avant l'ouverture d'une colonne.</b> C'est la pièce la plus lente à activer, et la plus forte une fois activée.</li><li><b>Un pion passé en finale peut valoir une tour.</b> La valeur d'un pion croît avec le nombre de rangées franchies.</li></ul><p>Le barème sert à calculer les échanges en une seconde. Le reste est du jugement.</p>"},{"t":"Structure de pions : le squelette","c":"<p>Philidor : « <em>les pions sont l'âme des échecs</em> ». Les pièces bougent, les pions restent — ils décident donc où se jouera la partie, pour vingt coups.</p><ul><li><b>Pion isolé</b> : aucun pion ami sur les colonnes voisines. Il ne peut jamais être défendu par un pion. Faible en finale, mais il donne de l'espace et des cases actives au milieu de jeu.</li><li><b>Pions doublés</b> : deux pions sur la même colonne. Ils ne peuvent pas se défendre entre eux et l'un des deux est souvent condamné. En échange : ils ouvrent une colonne pour vos tours.</li><li><b>Pion arriéré</b> : en retard sur ses voisins, il ne peut plus avancer sans tomber. C'est une cible permanente, et la case devant lui est un <em>trou</em>.</li><li><b>Pion passé</b> : plus aucun pion adverse devant lui ni sur les colonnes voisines. En finale, c'est de l'or. « <em>Un pion passé doit être poussé</em> » (Nimzowitsch), ou bloqué s'il est adverse — de préférence par un cavalier.</li><li><b>Chaîne de pions</b> : une diagonale de pions qui se défendent. Règle absolue : <em>elle s'attaque toujours à sa base</em>, jamais à sa tête (la tête est défendue, la base ne l'est pas).</li></ul><p class='ok'><b>Avant chaque échange, demandez-vous : « quelle structure ça me laisse ? »</b> Une structure saine gagne les finales toute seule.</p>"},{"t":"Le plan : comment savoir quoi jouer","c":"<p>La question de tout joueur bloqué : « je ne sais pas quoi faire ». La réponse est une méthode, pas du talent.</p><p><b>Étape 1 — Faire l'inventaire</b> (30 secondes, honnêtement) :</p><ul><li>Qui a le meilleur roi (sécurité) ?</li><li>Qui a la meilleure structure de pions ?</li><li>Y a-t-il une colonne ouverte ou semi-ouverte ? Qui peut la prendre ?</li><li>Quelle est ma pire pièce ? Quelle est la sienne ?</li><li>Y a-t-il des cases faibles (trous) dans son camp ? Puis-je y poser un cavalier ?</li></ul><p><b>Étape 2 — Le plan découle de l'inventaire.</b> Vous n'inventez rien, vous <em>lisez</em> la position :</p><ul><li>Colonne ouverte → doublez les tours dessus.</li><li>Trou dans son camp → installez-y un cavalier, soutenu par un pion.</li><li>Sa pire pièce est enfermée → évitez les échanges, jouez à une pièce de plus.</li><li>Majorité de pions sur une aile → poussez-la, créez un passé.</li><li>Son roi est mal → ouvrez les lignes vers lui, même au prix d'un pion.</li></ul><p><b>Étape 3 — La pièce la plus mauvaise.</b> S'il n'y a rien d'autre : <em>trouvez votre pire pièce et améliorez-la</em>. C'est la règle de Makogonov, et c'est le meilleur conseil « quand on ne sait pas quoi jouer » jamais donné.</p>"},{"t":"La règle du candidat (arrêter les gaffes)","c":"<p>En dessous de 1800 Elo, <b>99 % des parties se décident sur une gaffe</b>, pas sur un plan. Aucune ouverture ne compensera un cavalier laissé en prise. La bonne nouvelle : c'est réparable par une discipline, pas par du travail.</p><p><b>Le protocole en 3 questions, à chaque coup, sans exception</b> — y compris quand le coup semble évident (surtout quand il semble évident) :</p><ul><li><b>1. Après le coup de l'adversaire : qu'est-ce qui a changé ?</b> Quelle case attaque-t-il maintenant qu'il n'attaquait pas avant ? Regardez toute la ligne de la pièce qui vient de bouger, jusqu'au bord.</li><li><b>2. Toutes ses menaces :</b> échecs, prises, coups qui attaquent une pièce. Dans cet ordre. <em>Échecs. Prises. Menaces.</em></li><li><b>3. Avant de poser ma pièce : est-elle en prise ? Est-ce que je laisse quelque chose en prise derrière ?</b></li></ul><p class='ok'><b>Le geste physique qui marche :</b> choisissez votre coup, puis <em>gardez la main sur la pièce</em> et regardez l'échiquier une dernière fois comme si c'était le coup de l'adversaire. Ce demi-seconde d'audit vaut 200 points Elo. Ce n'est pas une image : c'est mesuré.</p>"},{"t":"Les 4 phases d'une attaque sur le roque","c":"<p>Attaquer n'est pas « foncer ». C'est une procédure.</p><ul><li><b>1. Le droit d'attaquer.</b> On n'attaque que si l'on a un avantage quelque part : plus de pièces sur l'aile, un centre fermé (donc il ne peut pas contre-attaquer au milieu), ou une structure affaiblie en face. <em>Attaquer sans droit, c'est se suicider.</em> (Règle de Steinitz.)</li><li><b>2. Amener les troupes.</b> Comptez les attaquants et les défenseurs autour du roi adverse. Il vous faut <b>un attaquant de plus</b> que lui de défenseurs. Amenez la dernière pièce (souvent une tour par Te1-e3-h3, ou le cavalier vers f5/g5) <em>avant</em> de frapper.</li><li><b>3. Ouvrir une ligne.</b> Un roi derrière trois pions intacts est imprenable. Il faut casser : h4-h5xg6, ou un sacrifice sur h7/f7/g7. Le sacrifice n'est pas de la magie, c'est un <em>ouvre-boîte</em>.</li><li><b>4. Le mat.</b> Là seulement, le calcul concret prend le relais.</li></ul><p class='ko'><b>L'erreur n°1 :</b> attaquer avec deux pièces. Ça ne marche jamais. La dame toute seule ne mate personne : elle a besoin d'un fou, d'un cavalier ou d'une tour à côté d'elle.</p>"},{"t":"Le milieu de jeu en finale : quand échanger","c":"<p>Chaque échange est une décision stratégique, jamais un réflexe.</p><ul><li><b>Vous avez du matériel en plus → échangez les pièces, pas les pions.</b> Moins il reste de pièces, plus votre avantage matériel pèse. Mais gardez des pions : sans pions, on ne mate pas (voir le mauvais fou).</li><li><b>Vous avez du matériel en moins → échangez les pions, pas les pièces.</b> Vous cherchez la finale nulle : moins de pions = plus de chances de forteresse ou de pat.</li><li><b>Vous êtes à l'étroit (moins d'espace) → échangez.</b> Chaque pièce échangée donne de l'air aux autres. Réciproquement, quand vous avez l'espace, <em>gardez les pièces sur l'échiquier</em> : c'est lui qui étouffe.</li><li><b>Échangez votre mauvaise pièce contre sa bonne pièce.</b> Toujours. C'est le meilleur échange qui existe et il ne coûte rien.</li><li><b>Échangez ses défenseurs.</b> Le cavalier f6 est le meilleur défenseur du roque noir : l'échanger vaut souvent un demi-pion et une attaque.</li></ul>"},{"t":"Le temps : gérer sa pendule","c":"<p>Un plan parfait joué en zeitnot est une partie perdue. La gestion du temps est une compétence à part.</p><ul><li><b>Jouez vite les coups théoriques et les reprises forcées.</b> Ne réfléchissez pas 5 minutes sur un coup où vous n'avez qu'une réponse.</li><li><b>Investissez le temps aux moments critiques :</b> quand la structure de pions va changer définitivement, quand il faut choisir un plan, quand il y a un sacrifice possible. Ces moments sont rares — 4 ou 5 par partie.</li><li><b>La règle du dernier tiers :</b> gardez toujours de quoi jouer les 10 derniers coups. La plupart des parties se perdent après le coup 30, quand les deux joueurs sont fatigués.</li><li><b>Après une longue réflexion, vérifiez la gaffe une fois de plus.</b> Le pic statistique de gaffes se situe <em>juste après</em> un coup longuement réfléchi : on est tellement content de son idée qu'on oublie de regarder la réponse.</li></ul>"}]};
+
+/* ==========================================================
+   ÉCHECS HUNTER — application
+   Le moteur (parseFEN, legal, makeMove, san, bestMove…) est
+   défini plus haut ; ici on ne fait que l'interface et la
+   progression.
+   ========================================================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CARDS = DATA.cards, PRINCIPLES = DATA.principles;
+const byId = id => CARDS.find(c => c.id === id);
+
+/* ---------------- progression ---------------- */
+const KEY = 'echecs_hunter_v2';
+const RANKS = [[1,'E'],[4,'D'],[8,'C'],[13,'B'],[19,'A'],[26,'S']];
+const RANK_NAME = {E:'Novice',D:'Écuyer',C:'Tacticien',B:'Stratège',A:'Maître d\'armes',S:'Monarque'};
+const RANK_TINT = {E:'#8d7a56',D:'#6f8f57',C:'#5c7fa6',B:'#8a6aa8',A:'#a2762f',S:'#9c4f42'};
+const TIER_NAME = {1:'Fondations',2:'Apprentissage',3:'Compréhension',4:'Avancé',5:'Maîtrise'};
+const KIND = {
+  opening:{n:'Ouverture', pl:'Ouvertures', ic:'♟', tint:'#e4ecd8'},
+  endgame:{n:'Finale',    pl:'Finales',    ic:'♔', tint:'#dbe6f0'},
+  tactic: {n:'Tactique',  pl:'Tactiques',  ic:'⚔', tint:'#f2dede'}
+};
+const SRS = [0,1,3,7,16,35], MAXBOX = 5;
+const XPV = {study:15, drill:60, trap:20, tac:25, endWin:80, line:45, princ:10, elo:15, game:[40,90,150]};
+
+const ymd = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today = () => ymd(new Date());
+const addDays = (s,n) => { const d = new Date(s+'T00:00:00'); d.setDate(d.getDate()+n); return ymd(d) };
+const dayDiff = (a,b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/864e5);
+
+function fresh(){ return {xp:0, items:{}, elo:[], streak:0, lastDay:null, days:{}, theme:'light', games:{w:0,d:0,l:0}, born:today()} }
+let S = load();
+function load(){ try{ const r = localStorage.getItem(KEY); if(r) return Object.assign(fresh(), JSON.parse(r)) }catch(e){} return fresh() }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+function rec(id){ if(!S.items[id]) S.items[id] = {box:0, ok:0, ko:0, next:null, seen:0}; return S.items[id] }
+
+const levelOf = xp => { let l = 1; while(l < 40 && xp >= xpFor(l+1)) l++; return l };
+const xpFor = l => Math.round(90*(l-1) + 26*Math.pow(l-1, 1.72));
+const rankOf = l => { let r = 'E'; for(const [n,x] of RANKS) if(l >= n) r = x; return r };
+const stars = id => { const b = rec(id).box; return b>=4?3 : b>=2?2 : b>=1?1 : 0 };
+const mastered = id => rec(id).box >= 2;
+const isDue = id => { const o = S.items[id]; return !!(o && o.next && dayDiff(o.next, today()) >= 0) };
+const isNew = id => !S.items[id] || S.items[id].box === 0;
+
+function tierOpen(t){
+  if(t <= 1) return true;
+  if(!tierOpen(t-1)) return false;
+  const prev = CARDS.filter(c => c.tier === t-1);
+  return !prev.length || prev.filter(c => mastered(c.id)).length / prev.length >= 0.7;
+}
+const maxTier = () => { let m = 1; for(let t = 1; t <= 5; t++) if(tierOpen(t)) m = t; return m };
+const dueList = () => CARDS.filter(c => tierOpen(c.tier) && isDue(c.id))
+  .sort((a,b) => rec(a.id).box - rec(b.id).box || a.tier - b.tier);
+
+function gainXP(n, why){
+  const before = levelOf(S.xp);
+  S.xp += n; S.days[today()] = (S.days[today()]||0) + n;
+  const t = today();
+  if(S.lastDay !== t){ S.streak = (S.lastDay && dayDiff(S.lastDay,t) === 1) ? S.streak+1 : 1; S.lastDay = t }
+  save();
+  toast(`<b>+${n} XP</b>${why ? ' · ' + why : ''}`);
+  const after = levelOf(S.xp);
+  if(after > before){
+    const r = rankOf(after);
+    setTimeout(() => toast(`<b style="font-size:19px">Niveau ${after}</b><br>Rang ${r} — ${RANK_NAME[r]}`, 4200), 700);
+  }
+  paintHead();
+}
+/** Met à jour la mémorisation espacée d'une fiche. */
+function grade(id, good){
+  const o = rec(id); o.seen++;
+  if(good){ o.ok++; o.box = Math.min(MAXBOX, o.box+1) } else { o.ko++; o.box = Math.max(0, o.box-1) }
+  o.next = addDays(today(), SRS[Math.min(o.box, MAXBOX)]);
+  save();
+}
+
+/* ---------------- utilitaires d'interface ---------------- */
+function toast(html, ms){
+  const d = document.createElement('div');
+  d.className = 'tst'; d.innerHTML = html;
+  $('#toast').appendChild(d);
+  setTimeout(() => { d.style.opacity = '0'; d.style.transition = 'opacity .4s'; setTimeout(() => d.remove(), 420) }, ms || 2600);
+}
+const starHTML = n => `<span class="stars">${'★'.repeat(n)}<span class="e">${'★'.repeat(3-n)}</span></span>`;
+function leaders(rows){
+  return `<ul class="leaders">${rows.map(([k,v]) =>
+    `<li><span class="k">${esc(k)}</span><span class="d"></span><span class="v">${esc(v)}</span></li>`).join('')}</ul>`;
+}
+function orbs(c){
+  const K = KIND[c.kind];
+  return `<div class="orbs">
+    <div class="orb" style="--tint:${K.tint}" data-tip="${K.n}">${K.ic}</div>
+    <div class="orb" style="--tint:#f0e6cc" data-tip="Palier ${c.tier} — ${TIER_NAME[c.tier]}">${c.tier}</div>
+    <div class="orb" style="--tint:${c.side === 'w' ? '#f7f2e4' : '#d9d0bd'}" data-tip="${c.side === 'w' ? 'Vous jouez les Blancs' : 'Vous jouez les Noirs'}">${c.side === 'w' ? '♙' : '♟'}</div>
+  </div>`;
+}
+
+/* ==========================================================
+   ÉCHIQUIER
+   ========================================================== */
+/* Glyphes PLEINS pour les deux camps (les glyphes évidés ♔♕ rendent mal
+   selon les polices) : la couleur seule distingue les camps.
+   \uFE0E force le rendu texte et empêche la substitution en emoji. */
+const V='\uFE0E';
+const GLYPH = {K:'♚'+V,Q:'♛'+V,R:'♜'+V,B:'♝'+V,N:'♞'+V,P:'♟'+V,
+               k:'♚'+V,q:'♛'+V,r:'♜'+V,b:'♝'+V,n:'♞'+V,p:'♟'+V};
+function Board(host, opt){
+  const B = {
+    pos: parseFEN(opt.fen || START), flip: !!opt.flip, sel: -1, targets: [],
+    last: null, locked: false, hint: null, onMove: opt.onMove || (() => {})
+  };
+  B.set = fen => { B.pos = parseFEN(fen); B.sel = -1; B.targets = []; B.last = null; B.draw() };
+  B.setPos = p => { B.pos = p; B.sel = -1; B.targets = []; B.draw() };
+  B.draw = () => {
+    const idx = [...Array(64).keys()], order = B.flip ? idx.reverse() : idx;
+    host.innerHTML = order.map(i => {
+      const r = i >> 3, c = i & 7, pc = B.pos.b[i];
+      const cl = ['sq', (r+c) % 2 ? 'd' : 'l'];
+      if(B.sel === i) cl.push('sel');
+      if(B.last && (B.last.from === i || B.last.to === i)) cl.push('last');
+      if(B.hint && B.hint.includes(i)) cl.push('hint');
+      const t = B.targets.find(m => m.to === i);
+      const mark = t ? (pc ? '<span class="ring"></span>' : '<span class="dot"></span>') : '';
+      const f = FILES[c], rank = 8 - r;
+      const coF = (B.flip ? r === 0 : r === 7) ? `<span class="co f">${f}</span>` : '';
+      const coR = (B.flip ? c === 7 : c === 0) ? `<span class="co r">${rank}</span>` : '';
+      return `<div class="${cl.join(' ')}" data-i="${i}">${mark}${pc ? `<span class="pc ${isW(pc) ? 'w' : 'b'}">${GLYPH[pc]}</span>` : ''}${coF}${coR}</div>`;
+    }).join('');
+  };
+  B.shake = () => { host.classList.add('shake'); setTimeout(() => host.classList.remove('shake'), 340) };
+  host.onclick = e => {
+    if(B.locked) return;
+    const sq = e.target.closest('.sq'); if(!sq) return;
+    const i = +sq.dataset.i;
+    const hit = B.targets.find(m => m.to === i);
+    if(hit){
+      const proms = B.targets.filter(m => m.to === i && m.promo);
+      if(proms.length){ pickPromo(B.pos.t === 'w', q => { B.sel = -1; B.targets = []; B.onMove(proms.find(m => m.promo.toLowerCase() === q) || proms[0]) }); return }
+      B.sel = -1; B.targets = []; B.onMove(hit); return;
+    }
+    const pc = B.pos.b[i];
+    if(pc && isW(pc) === (B.pos.t === 'w')){
+      B.sel = i; B.targets = legal(B.pos).filter(m => m.from === i); B.hint = null;
+    } else { B.sel = -1; B.targets = [] }
+    B.draw();
+  };
+  B.draw();
+  window.__board = B;   /* poignée de diagnostic (tests, console) */
+  return B;
+}
+function pickPromo(white, cb){
+  const P = white ? ['Q','R','B','N'] : ['q','r','b','n'];
+  overlay(`<div class="pad center"><div class="rule"><span>Promotion</span></div>
+    <div class="row" style="justify-content:center">${P.map(p =>
+      `<button class="btn" data-p="${p.toLowerCase()}" style="font-size:34px;padding:10px 17px;line-height:1">${GLYPH[p]}</button>`).join('')}</div></div>`);
+  $$('#overlay [data-p]').forEach(b => b.onclick = () => { closeOverlay(); cb(b.dataset.p) });
+}
+/** Petit diagramme statique (pour les vignettes). */
+function miniBoard(fen, size){
+  const p = parseFEN(fen), s = size || 116;
+  let h = `<div style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:${s}px;height:${s}px;border:1px solid var(--edge2)">`;
+  for(let i = 0; i < 64; i++){
+    const r = i >> 3, c = i & 7, pc = p.b[i];
+    h += `<div style="background:${(r+c)%2 ? 'var(--sq-d)' : 'var(--sq-l)'};display:grid;place-items:center;font-size:${s/9}px;line-height:1;color:${pc && isW(pc) ? '#fffdf7' : '#241a0e'};text-shadow:${pc && isW(pc) ? '0 0 1px #2a1f10' : 'none'}">${pc ? GLYPH[pc] : ''}</div>`;
+  }
+  return h + '</div>';
+}
+
+/* ==========================================================
+   SUPERPOSITION
+   ========================================================== */
+function overlay(html){
+  $('#obox').innerHTML = `<div class="oclose" onclick="closeOverlay()">✕</div>` + html;
+  $('#overlay').classList.add('on');
+  $('#overlay').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay(){
+  $('#overlay').classList.remove('on'); $('#obox').innerHTML = '';
+  document.body.style.overflow = '';
+  if(typeof render === 'function') render();
+}
+$('#overlay').addEventListener('click', e => { if(e.target.id === 'overlay') closeOverlay() });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#overlay').classList.contains('on')) closeOverlay() });
+
+/* ==========================================================
+   FICHE DÉTAILLÉE — le cœur : une « fiche de personnage »
+   ========================================================== */
+function openCard(id){
+  const c = byId(id);
+  if(!c || !tierOpen(c.tier)) return;
+  rec(id).seen++; save();
+  const K = KIND[c.kind];
+  overlay(`
+    <div class="pad grain" style="position:relative">
+      <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+      <div class="banner">${K.n}</div>
+      <div class="profile" style="margin-top:20px">
+        <div>
+          <div class="pname-deco"></div>
+          <div class="pname">${esc(c.name)}</div>
+          <div class="psub">${esc(c.sub || '')}</div>
+          ${orbs(c)}
+          ${leaders(c.stats)}
+          ${c.fixnote ? `<div class="note" style="margin-top:14px;border-left-color:var(--wine);font-size:14px">
+            <b>Position corrigée.</b> ${esc(c.fixnote)}</div>` : ''}
+          <div class="rule"><span>Armes</span></div>
+          <div class="relics" id="relics"></div>
+        </div>
+        <div>
+          <div class="boardbox"><div class="board" id="cb"></div></div>
+          <div class="bstat" id="cstat"></div>
+          <div class="bctl" id="cctl"></div>
+        </div>
+      </div>
+      <div class="rule"><span>Histoire</span></div>
+      <div class="prose" id="cstory"></div>
+      <div id="cextra"></div>
+    </div>`);
+  ({opening: mountOpening, endgame: mountEndgame, tactic: mountTactic})[c.kind](c);
+}
+
+/* Nom lisible d'une pièce, accordé en genre et en nombre. */
+const PIECE_FR = {q:['Dame',1], r:['Tour',1], b:['Fou',0], n:['Cavalier',0], p:['Pion',0], k:['Roi',0]};
+function pieceLabel(x, n){
+  const [nom, fem] = PIECE_FR[x.toLowerCase()] || ['Pièce', 1];
+  const pl = n > 1;
+  const couleur = isW(x) ? (fem ? 'blanche' : 'blanc') : (fem ? 'noire' : 'noir');
+  return `${pl ? n + ' ' : ''}${nom}${pl ? 's' : ''} ${couleur}${pl ? 's' : ''}`;
+}
+
+/* ---------- relics : les « armes » de la fiche ---------- */
+function relicsFor(c){
+  const out = [];
+  if(c.kind === 'opening'){
+    const seen = new Set();
+    for(const m of c.moves){
+      const g = /^[KQRBN]/.test(m) ? {K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘'}[m[0]] : '♙';
+      const key = g + (m.length > 3 ? '' : m);
+      if(seen.has(key) || out.length >= 4) continue;
+      seen.add(key); out.push([g, m]);
+    }
+  } else if(c.kind === 'endgame'){
+    const p = parseFEN(c.fen);
+    const cnt = {};
+    p.b.forEach(x => { if(x && x.toLowerCase() !== 'k') cnt[x] = (cnt[x]||0)+1 });
+    Object.keys(cnt).slice(0,4).forEach(x => out.push([GLYPH[x], pieceLabel(x, cnt[x])]));
+    if(!out.length) out.push([GLYPH.K, 'Les rois seuls']);
+  } else {
+    out.push([c.mate ? '♛' : '⚔', c.mate ? 'Mat forcé' : 'Gain matériel']);
+    const p = parseFEN(c.fen);
+    const cnt = {};
+    p.b.forEach(x => { if(x && x.toLowerCase() !== 'k' && isW(x)) cnt[x] = (cnt[x]||0)+1 });
+    Object.keys(cnt).slice(0,3).forEach(x => out.push([GLYPH[x], pieceLabel(x, cnt[x])]));
+  }
+  $('#relics').innerHTML = out.map(([g,t]) =>
+    `<div class="relic"><div class="ic">${g}</div><div class="cap">${esc(t)}</div></div>`).join('');
+}
+
+/* ---------- OUVERTURE : étude pas à pas + récitation ---------- */
+function mountOpening(c){
+  relicsFor(c);
+  const st = {i:0, mode:'study', errs:0};
+  const B = Board($('#cb'), {fen: START, flip: c.side === 'b', onMove: m => userMove(m)});
+  const posAt = n => { let p = parseFEN(START); for(let k = 0; k < n; k++) p = makeMove(p, fromSAN(p, c.moves[k])); return p };
+
+  function paint(){
+    const p = posAt(st.i);
+    B.setPos(p);
+    if(st.i > 0){ const q = posAt(st.i-1); B.last = fromSAN(q, c.moves[st.i-1]) } else B.last = null;
+    B.locked = st.mode === 'study';
+    B.draw();
+    $('#cstat').innerHTML = st.mode === 'study'
+      ? `Coup ${st.i} / ${c.moves.length}`
+      : (st.i >= c.moves.length ? '<b class="mut">Ligne terminée</b>'
+         : (posAt(st.i).t === (c.side === 'w' ? 'w' : 'b') ? '<b>À vous de jouer</b>' : 'Réponse adverse…'));
+    $('#cnote').innerHTML = st.i > 0 ? (c.notes[st.i-1] || `<b>${esc(c.moves[st.i-1])}</b>`) :
+      "Parcourez la ligne coup par coup : chaque commentaire explique <em>pourquoi</em> ce coup, pas seulement lequel.";
+    $('#cmoves').innerHTML = c.moves.map((m,k) =>
+      (k % 2 === 0 ? `<span class="num">${k/2+1}.</span>` : '') +
+      `<span class="${k === st.i-1 ? 'on' : ''}" data-k="${k}">${esc(m)}</span>`).join('');
+    $$('#cmoves span[data-k]').forEach(s => s.onclick = () => { if(st.mode === 'study'){ st.i = +s.dataset.k + 1; paint() } });
+    $('#bPrev').disabled = st.i === 0;
+    $('#bNext').disabled = st.i >= c.moves.length;
+  }
+  function userMove(m){
+    const p = posAt(st.i), want = fromSAN(p, c.moves[st.i]);
+    if(m.from === want.from && m.to === want.to && (m.promo||'') === (want.promo||'')){
+      st.i++; paint();
+      if(st.i < c.moves.length){ B.locked = true; setTimeout(() => { st.i++; paint(); if(st.i >= c.moves.length) done() }, 480) }
+      else done();
+    } else {
+      st.errs++; B.shake();
+      $('#cnote').innerHTML = `<b style="color:var(--ko)">Ce n'est pas le coup de la ligne.</b> ${st.errs >= 2 ? 'Servez-vous de « Indice », puis reprenez : c\'est en refaisant sans aide que ça rentre.' : 'Relisez l\'idée générale sous l\'échiquier.'}`;
+      B.sel = -1; B.targets = []; B.draw();
+    }
+  }
+  function done(){
+    B.locked = true;
+    const good = st.errs === 0;
+    grade(c.id, good);
+    gainXP(good ? XPV.drill : Math.round(XPV.drill/3), good ? 'récitation sans faute' : 'ligne terminée');
+    $('#cstat').innerHTML = good ? '<b style="color:var(--ok)">Parfait — ligne récitée sans aucune erreur.</b>'
+      : `<b>Ligne terminée</b> · ${st.errs} erreur${st.errs > 1 ? 's' : ''}`;
+  }
+  $('#cctl').innerHTML = `
+    <button class="btn sm" id="bPrev">‹ Précédent</button>
+    <button class="btn sm gold" id="bNext">Coup suivant ›</button>
+    <button class="btn sm" id="bDrill">Réciter de mémoire</button>
+    <button class="btn sm" id="bFlip">Retourner</button>
+    <button class="btn sm hide" id="bHint">Indice</button>`;
+  $('#cstory').innerHTML = `
+    <div class="note" id="cnote"></div>
+    <div class="rule"><span>La partie</span></div>
+    <div class="moves" id="cmoves"></div>
+    <div class="rule"><span>L'idée</span></div>
+    <p>${c.idea}</p>
+    ${(c.keys||[]).length ? `<div class="rule"><span>Points clés</span></div><ul>${c.keys.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}
+    ${(c.plans && (c.plans.w||c.plans.b)) ? `<div class="rule"><span>Plans</span></div>
+      <div class="row" style="gap:22px">
+        ${c.plans.w ? `<div style="flex:1;min-width:230px"><b>♙ Les Blancs cherchent à…</b><ul>${c.plans.w.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+        ${c.plans.b ? `<div style="flex:1;min-width:230px"><b>♟ Les Noirs cherchent à…</b><ul>${c.plans.b.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+      </div>` : ''}
+    ${c.goal ? `<div class="rule"><span>Résultat visé</span></div><p>${esc(c.goal)}</p>` : ''}`;
+  if(c.traps && c.traps.length) mountTraps(c);
+  $('#bPrev').onclick = () => { if(st.i > 0){ st.i--; paint() } };
+  $('#bNext').onclick = () => { if(st.i < c.moves.length){ st.i++; paint(); if(st.i >= c.moves.length && st.mode === 'study'){ grade(c.id, true); gainXP(XPV.study, 'ouverture étudiée') } } };
+  $('#bFlip').onclick = () => { B.flip = !B.flip; B.draw() };
+  $('#bHint').onclick = () => {
+    const p = posAt(st.i), w = fromSAN(p, c.moves[st.i]);
+    B.hint = [w.from]; B.draw();
+    $('#cnote').innerHTML = `<b style="color:var(--warn)">Indice</b> — la pièce à jouer est mise en évidence.`;
+    st.errs = Math.max(st.errs, 1);
+  };
+  $('#bDrill').onclick = () => {
+    st.mode = st.mode === 'study' ? 'drill' : 'study'; st.i = 0; st.errs = 0;
+    $('#bDrill').textContent = st.mode === 'drill' ? 'Revenir à l\'étude' : 'Réciter de mémoire';
+    $('#bHint').classList.toggle('hide', st.mode !== 'drill');
+    $('#bPrev').classList.toggle('hide', st.mode === 'drill');
+    $('#bNext').classList.toggle('hide', st.mode === 'drill');
+    paint();
+    if(st.mode === 'drill' && c.side === 'b'){ setTimeout(() => { st.i = 1; paint() }, 420) }
+  };
+  paint();
+}
+function mountTraps(c){
+  $('#cextra').innerHTML = `<div class="rule"><span>Pièges de l'ouverture</span></div>
+    <div class="gal">${c.traps.map((t,k) => `
+      <div class="gcard" data-trap="${k}">
+        <div class="gn" style="font-size:17px">${esc(t.name)}</div>
+        <div class="gs">${t.moves && t.moves.length ? esc(t.moves.slice(0,6).join(' ')) + '…' : 'À connaître absolument.'}</div>
+        <div class="gf"><span class="tag gold">${t.moves && t.moves.length ? 'Rejouer' : 'Lire'}</span></div>
+      </div>`).join('')}</div>`;
+  $$('#cextra [data-trap]').forEach(el => el.onclick = () => showTrap(c, c.traps[+el.dataset.trap]));
+}
+function showTrap(c, t){
+  overlay(`<div class="pad grain">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Piège</div>
+    <div class="profile" style="margin-top:18px">
+      <div>
+        <div class="pname" style="font-size:29px">${esc(t.name)}</div>
+        <div class="psub">${esc(c.name)}</div>
+        <div class="prose" style="margin-top:14px">${t.text || ''}</div>
+      </div>
+      <div>
+        ${t.moves && t.moves.length ? `<div class="boardbox"><div class="board" id="tb"></div></div>
+        <div class="bstat" id="tstat"></div>
+        <div class="bctl">
+          <button class="btn sm" id="tPrev">‹</button>
+          <button class="btn sm gold" id="tNext">Coup suivant ›</button>
+          <button class="btn sm" id="tBack">Retour à la fiche</button></div>
+        <div class="moves" id="tmoves" style="margin-top:11px"></div>` :
+        `<div class="center dim">Ce piège se comprend à la lecture — pas de ligne à rejouer.</div>
+         <div class="bctl"><button class="btn sm" id="tBack">Retour à la fiche</button></div>`}
+      </div>
+    </div></div>`);
+  $('#tBack').onclick = () => openCard(c.id);
+  if(!(t.moves && t.moves.length)) return;
+  let i = 0;
+  const B = Board($('#tb'), {fen: START, flip: false});
+  B.locked = true;
+  const posAt = n => { let p = parseFEN(START); for(let k = 0; k < n; k++) p = makeMove(p, fromSAN(p, t.moves[k])); return p };
+  const paint = () => {
+    const p = posAt(i); B.setPos(p);
+    if(i > 0){ const q = posAt(i-1); B.last = fromSAN(q, t.moves[i-1]) }
+    B.locked = true; B.draw();
+    $('#tstat').innerHTML = i >= t.moves.length ? '<b>Fin de la ligne</b>' : `Coup ${i} / ${t.moves.length}`;
+    $('#tmoves').innerHTML = t.moves.map((m,k) => (k%2===0 ? `<span class="num">${k/2+1}.</span>` : '') +
+      `<span class="${k === i-1 ? 'on' : ''}">${esc(m)}</span>`).join('');
+    $('#tPrev').disabled = i === 0; $('#tNext').disabled = i >= t.moves.length;
+  };
+  $('#tPrev').onclick = () => { if(i > 0){ i--; paint() } };
+  $('#tNext').onclick = () => { if(i < t.moves.length){ i++; paint(); if(i >= t.moves.length) gainXP(XPV.trap, 'piège étudié') } };
+  paint();
+}
+
+/* ---------- FINALE : théorie + jeu contre le moteur ---------- */
+function mountEndgame(c){
+  relicsFor(c);
+  if(c.goal === 'line'){ mountLine(c); return }
+  const st = {over:false, moves:[]};
+  const B = Board($('#cb'), {fen: c.fen, flip: c.side === 'b', onMove: m => play(m)});
+  $('#cctl').innerHTML = `
+    <button class="btn sm gold" id="bHint">Indice</button>
+    <button class="btn sm" id="bAgain">Recommencer</button>
+    <button class="btn sm" id="bFlip">Retourner</button>`;
+  $('#cstory').innerHTML = `
+    <div class="note" id="cnote">${esc(c.sub || '')}</div>
+    ${c.steps && c.steps.length ? `<div class="rule"><span>La marche à suivre</span></div>
+      <ol>${c.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : ''}
+    <div class="rule"><span>La théorie</span></div>
+    <div>${c.theory || `<p>${esc(c.idea)}</p>`}</div>`;
+  const stat = h => $('#cstat').innerHTML = h;
+  stat(`<b>${{mate:'Objectif : mater',promo:'Objectif : promouvoir',draw:'Objectif : annuler','draw-lesson':'Comprenez pourquoi c\'est nulle'}[c.goal] || ''}</b>`);
+
+  function finish(ok, msg){
+    st.over = true; B.locked = true;
+    stat(`<b style="color:${ok ? 'var(--ok)' : 'var(--ko)'}">${msg}</b>`);
+    grade(c.id, ok);
+    if(ok) gainXP(XPV.endWin, 'finale réussie');
+    return true;                 /* <- indispensable : check() propage ce booléen */
+  }
+  function check(){
+    const p = B.pos;
+    if(isMate(p)){
+      const winnerWhite = p.t === 'b';
+      const mine = (c.side === 'w') === winnerWhite;
+      return finish(mine && c.goal === 'mate', mine ? 'Mat ! Technique maîtrisée.' : 'Vous êtes maté.');
+    }
+    if(isStale(p)) return finish(c.goal === 'draw' || c.goal === 'draw-lesson', c.goal.startsWith('draw') ? 'Pat — c\'est exactement la nulle recherchée.' : 'Pat : la partie est nulle, l\'objectif est manqué.');
+    if(insufficient(p)) return finish(c.goal === 'draw' || c.goal === 'draw-lesson', c.goal.startsWith('draw') ? 'Matériel insuffisant — nulle obtenue.' : 'Matériel insuffisant : nulle.');
+    const mySide = c.side === 'w' ? 'W' : 'B';
+    const startQ = parseFEN(c.fen).b.filter(x => x && x.toLowerCase() === 'q' && isW(x) === (mySide === 'W')).length;
+    const nowQ = p.b.filter(x => x && x.toLowerCase() === 'q' && isW(x) === (mySide === 'W')).length;
+    if(c.goal === 'promo' && nowQ > startQ) return finish(true, 'Promotion ! Le pion est passé.');
+    if(p.half >= 100) return finish(c.goal.startsWith('draw'), 'Règle des 50 coups : nulle.');
+    return false;
+  }
+  function reply(){
+    B.locked = true;
+    setTimeout(() => {
+      if(st.over) return;
+      const m = bestMove(B.pos, 3);
+      if(!m){ check(); return }
+      B.setPos(makeMove(B.pos, m)); B.last = m; B.draw();
+      if(!check()) B.locked = false;
+    }, 340);
+  }
+  function play(m){
+    if(st.over) return;
+    const s = san(B.pos, m);
+    st.moves.push(s);
+    B.setPos(makeMove(B.pos, m)); B.last = m; B.draw();
+    $('#cnote').innerHTML = `Vous avez joué <b>${esc(s)}</b>. Le moteur défend au mieux : s'il tient, c'est que la technique n'est pas encore juste.`;
+    if(!check()) reply();
+  }
+  $('#bHint').onclick = () => {
+    if(st.over) return;
+    const m = bestMove(B.pos, 4);
+    if(m){ B.hint = [m.from]; B.draw(); $('#cnote').innerHTML = `<b style="color:var(--warn)">Indice</b> — commencez par cette pièce.` }
+  };
+  $('#bAgain').onclick = () => { st.over = false; st.moves = []; B.set(c.fen); B.locked = false; stat('<b>On reprend depuis le début.</b>') };
+  $('#bFlip').onclick = () => { B.flip = !B.flip; B.draw() };
+}
+/** Finale « ligne à rejouer » (mes fiches vérifiées coup par coup). */
+function mountLine(c){
+  const st = {i:0, errs:0};
+  const B = Board($('#cb'), {fen: c.fen, flip: c.side === 'b', onMove: m => userMove(m)});
+  const posAt = n => { let p = parseFEN(c.fen); for(let k = 0; k < n; k++) p = makeMove(p, fromSAN(p, c.moves[k])); return p };
+  $('#cctl').innerHTML = `<button class="btn sm gold" id="bNext">Coup suivant ›</button>
+    <button class="btn sm" id="bPrev">‹ Précédent</button>
+    <button class="btn sm" id="bFlip">Retourner</button>`;
+  $('#cstory').innerHTML = `<div class="note" id="cnote"></div>
+    <div class="rule"><span>La technique</span></div>
+    <div class="moves" id="cmoves"></div>
+    <div class="rule"><span>L'idée</span></div><p>${c.idea}</p>
+    ${(c.keys||[]).length ? `<div class="rule"><span>Points clés</span></div><ul>${c.keys.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}
+    ${c.goaltxt ? `<p style="margin-top:10px"><b>Résultat :</b> ${esc(c.goaltxt)}</p>` : ''}
+    ${c.trap ? `<div class="note" style="border-left-color:var(--wine);margin-top:12px">${esc(c.trap)}</div>` : ''}`;
+  function paint(){
+    B.setPos(posAt(st.i));
+    if(st.i > 0){ const q = posAt(st.i-1); B.last = fromSAN(q, c.moves[st.i-1]) } else B.last = null;
+    B.locked = true; B.draw();
+    $('#cstat').innerHTML = `Coup ${st.i} / ${c.moves.length}`;
+    $('#cnote').innerHTML = st.i > 0 ? (c.notes[st.i-1] || `<b>${esc(c.moves[st.i-1])}</b>`) : esc(c.sub || '');
+    $('#cmoves').innerHTML = c.moves.map((m,k) => (k%2===0 ? `<span class="num">${k/2+1}.</span>` : '') +
+      `<span class="${k === st.i-1 ? 'on' : ''}" data-k="${k}">${esc(m)}</span>`).join('');
+    $$('#cmoves span[data-k]').forEach(s => s.onclick = () => { st.i = +s.dataset.k+1; paint() });
+    $('#bPrev').disabled = st.i === 0; $('#bNext').disabled = st.i >= c.moves.length;
+  }
+  function userMove(){}
+  $('#bNext').onclick = () => { if(st.i < c.moves.length){ st.i++; paint(); if(st.i >= c.moves.length){ grade(c.id, true); gainXP(XPV.line, 'technique parcourue') } } };
+  $('#bPrev').onclick = () => { if(st.i > 0){ st.i--; paint() } };
+  $('#bFlip').onclick = () => { B.flip = !B.flip; B.draw() };
+  relicsFor(c); paint();
+}
+
+/* ---------- TACTIQUE : exercice ou démonstration ---------- */
+function mountTactic(c){
+  relicsFor(c);
+  if(c.moves && c.moves.length){ mountLine(Object.assign({}, c, {goal:'line'})); return }
+  const st = {i:0, done:false, errs:0};
+  const B = Board($('#cb'), {fen: c.fen, flip: c.side === 'b', onMove: m => tryMove(m)});
+  $('#cctl').innerHTML = `<button class="btn sm gold" id="bHint">Indice</button>
+    <button class="btn sm" id="bSol">Voir la solution</button>
+    <button class="btn sm" id="bAgain">Recommencer</button>`;
+  $('#cstory').innerHTML = `<div class="note" id="cnote">Trouvez le meilleur coup. Prenez le temps de regarder <em>toutes</em> les pièces en prise avant de jouer.</div>
+    <div class="rule"><span>Le motif</span></div><div id="ctext" class="hide">${c.text || ''}</div>
+    <p id="cveil" class="dim">L'explication du motif apparaît une fois l'exercice résolu — cherchez d'abord.</p>`;
+  $('#cstat').innerHTML = `<b>${c.mate ? 'Trouvez le mat' : 'Gagnez du matériel'}</b>`;
+  const posAt = n => { let p = parseFEN(c.fen); for(let k = 0; k < n; k++) p = makeMove(p, fromSAN(p, c.sol[k])); return p };
+  function reveal(ok){
+    st.done = true; B.locked = true;
+    $('#ctext').classList.remove('hide'); $('#cveil').classList.add('hide');
+    grade(c.id, ok && st.errs === 0);
+    if(ok) gainXP(st.errs === 0 ? XPV.tac : Math.round(XPV.tac/3), st.errs === 0 ? 'tactique résolue' : 'tactique vue');
+  }
+  function tryMove(m){
+    if(st.done) return;
+    const p = posAt(st.i), want = fromSAN(p, c.sol[st.i]);
+    if(m.from === want.from && m.to === want.to && (m.promo||'') === (want.promo||'')){
+      st.i++;
+      B.setPos(posAt(st.i)); B.last = want; B.draw();
+      if(st.i >= c.sol.length){
+        $('#cstat').innerHTML = `<b style="color:var(--ok)">${c.mate ? 'Mat !' : 'Trouvé !'}</b>`;
+        $('#cnote').innerHTML = `<b>${esc(c.sol.join(' '))}</b> — exactement ça.`;
+        reveal(true);
+      } else {
+        // réponse forcée de l'adversaire
+        setTimeout(() => {
+          const q = posAt(st.i), r = fromSAN(q, c.sol[st.i]);
+          st.i++; B.setPos(posAt(st.i)); B.last = r; B.draw();
+          $('#cnote').innerHTML = `Bien. L'adversaire répond <b>${esc(c.sol[st.i-1])}</b> — continuez.`;
+          if(st.i >= c.sol.length){ $('#cstat').innerHTML = '<b style="color:var(--ok)">Séquence complète !</b>'; reveal(true) }
+        }, 450);
+      }
+    } else {
+      st.errs++; B.shake(); B.sel = -1; B.targets = []; B.draw();
+      $('#cnote').innerHTML = `<b style="color:var(--ko)">Pas celui-là.</b> ${st.errs >= 2 ? 'Utilisez l\'indice : ' + esc(c.hint || 'cherchez le coup le plus forçant.') : 'Cherchez le coup le plus <em>forçant</em> : échec, prise, ou menace imparable.'}`;
+    }
+  }
+  $('#bHint').onclick = () => {
+    if(st.done) return;
+    const p = posAt(st.i), w = fromSAN(p, c.sol[st.i]);
+    B.hint = [w.from]; B.draw(); st.errs = Math.max(st.errs, 1);
+    $('#cnote').innerHTML = `<b style="color:var(--warn)">Indice</b> — ${esc(c.hint || 'commencez par cette pièce.')}`;
+  };
+  $('#bSol').onclick = () => {
+    st.errs = 9;
+    let k = 0;
+    const step = () => {
+      if(k >= c.sol.length){ $('#cstat').innerHTML = '<b>Solution complète</b>'; reveal(false); return }
+      const p = posAt(k), m = fromSAN(p, c.sol[k]); k++;
+      B.setPos(posAt(k)); B.last = m; B.draw();
+      $('#cnote').innerHTML = `<b>${esc(c.sol.slice(0,k).join(' '))}</b>`;
+      setTimeout(step, 620);
+    };
+    st.i = 0; B.set(c.fen); step();
+  };
+  $('#bAgain').onclick = () => { st.i = 0; st.done = false; st.errs = 0; B.set(c.fen); B.locked = false;
+    $('#ctext').classList.add('hide'); $('#cveil').classList.remove('hide');
+    $('#cnote').innerHTML = 'On recommence. Cherchez le coup forçant.'; };
+}
+
+/* ==========================================================
+   VUES
+   ========================================================== */
+function galleryHTML(kind){
+  let h = '';
+  for(let t = 1; t <= 5; t++){
+    const list = CARDS.filter(c => c.kind === kind && c.tier === t);
+    if(!list.length) continue;
+    const open = tierOpen(t), done = list.filter(c => mastered(c.id)).length;
+    h += `<div class="rule"><span>Palier ${t} — ${TIER_NAME[t]}</span></div>
+      <div style="margin:-6px 0 11px;font-size:13.5px" class="dim">
+        ${done}/${list.length} maîtrisée${done > 1 ? 's' : ''}${open ? '' : ' · <b style="color:var(--wine)">verrouillé</b> — terminez le palier précédent à 70 %'}</div>
+      <div class="gal">${list.map(c => cardHTML(c, open)).join('')}</div>`;
+  }
+  return h;
+}
+function cardHTML(c, open){
+  const lock = !open, due = isDue(c.id);
+  return `<div class="gcard ${lock ? 'lock' : ''}" ${lock ? '' : `onclick="openCard('${c.id}')"`}>
+    <div class="gf" style="margin:0 0 2px">
+      <span class="tag">${KIND[c.kind].ic} ${c.eco || KIND[c.kind].n}</span>
+      ${due ? '<span class="tag due">à réviser</span>' : ''}
+      <span style="margin-left:auto">${starHTML(stars(c.id))}</span>
+    </div>
+    <div class="gn">${esc(c.name)}</div>
+    <div class="gs">${esc((c.sub || '').slice(0, 96))}</div>
+    <div class="gf">
+      ${lock ? '<span class="tag">🔒 verrouillé</span>' : `<span class="tag ${c.src === 'hunter' ? 'gold' : ''}">${c.src === 'hunter' ? 'vérifié moteur' : KIND[c.kind].n}</span>`}
+      ${c.side === 'b' ? '<span class="tag">côté noir</span>' : ''}
+    </div>
+  </div>`;
+}
+
+function vProfil(){
+  const lvl = levelOf(S.xp), rk = rankOf(lvl), cur = xpFor(lvl), nxt = xpFor(lvl+1);
+  const pct = Math.max(3, Math.min(100, (S.xp - cur) / (nxt - cur) * 100));
+  const mast = CARDS.filter(c => mastered(c.id)).length;
+  const due = dueList();
+  const nw = CARDS.filter(c => tierOpen(c.tier) && isNew(c.id));
+  const elo = S.elo.length ? S.elo[S.elo.length-1].v : null;
+
+  let action;
+  if(due.length) action = {t:`${due.length} fiche${due.length>1?'s':''} vous attend${due.length>1?'ent':''} au Donjon`,
+    d:"C'est le moment précis où votre mémoire est sur le point de lâcher — le réviser maintenant est ce qui l'ancre pour de bon.",
+    b:`<button class="btn gold" onclick="go('donjon')">Entrer dans le donjon</button>`};
+  else if(nw.length) action = {t:`Apprendre : ${nw[0].name}`, d:nw[0].sub || '',
+    b:`<button class="btn gold" onclick="openCard('${nw[0].id}')">Ouvrir la fiche</button>`};
+  else action = {t:'Tout est révisé', d:"Rien à réviser aujourd'hui. Le meilleur usage de votre temps maintenant : une vraie partie longue.",
+    b:`<button class="btn gold" onclick="go('partie')">Jouer une partie</button>`};
+
+  $('#v-profil').innerHTML = `
+  <div class="sheet grain pad">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Profil</div>
+    <div class="profile" style="margin-top:20px">
+      <div>
+        <div class="pname-deco"></div>
+        <div class="pname">Corentin</div>
+        <div class="psub">Rang ${rk} — ${RANK_NAME[rk]}</div>
+        <div class="orbs">
+          <div class="orb" style="--tint:${RANK_TINT[rk]}33" data-tip="Rang ${rk}">${rk}</div>
+          <div class="orb" style="--tint:#f0e6cc" data-tip="Niveau ${lvl}">${lvl}</div>
+          <div class="orb" style="--tint:#e4ecd8" data-tip="Série de ${S.streak} jour(s)">🔥</div>
+        </div>
+        ${leaders([
+          ['Niveau', 'Niv. ' + lvl],
+          ['Expérience', S.xp.toLocaleString('fr-FR') + ' XP'],
+          ['Fiches maîtrisées', mast + ' / ' + CARDS.length],
+          ['Palier ouvert', maxTier() + ' / 5'],
+          ['Série en cours', S.streak + ' jour' + (S.streak > 1 ? 's' : '')],
+          ['Classement Elo', elo ? elo : 'non renseigné'],
+          ['Parties', `${S.games.w}V · ${S.games.d}N · ${S.games.l}D`]
+        ])}
+        <div class="bar" style="margin-top:15px"><i style="width:${pct}%"></i></div>
+        <div class="dim" style="font-size:13px;margin-top:6px">
+          ${(S.xp-cur).toLocaleString('fr-FR')} / ${(nxt-cur).toLocaleString('fr-FR')} XP vers le niveau ${lvl+1}</div>
+      </div>
+      <div>
+        <div class="polaroid r" style="margin:0 auto 18px">
+          ${miniBoard(START, 188)}
+          <div class="cap">L'échiquier vous attend</div>
+        </div>
+        <div class="sheet" style="padding:15px">
+          <b style="font-family:var(--fdisp);font-size:19px">${esc(action.t)}</b>
+          <p class="mut" style="font-size:14.5px;margin:7px 0 12px">${esc(action.d)}</p>
+          ${action.b}
+        </div>
+      </div>
+    </div>
+    <div class="rule"><span>Progression par domaine</span></div>
+    <div class="grid">${Object.keys(KIND).map(k => {
+      const all = CARDS.filter(c => c.kind === k), m = all.filter(c => mastered(c.id)).length;
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:14.5px;margin-bottom:5px">
+          <b>${KIND[k].ic} ${KIND[k].pl}</b><span class="dim">${m}/${all.length}</span></div>
+        <div class="bar"><i style="width:${m/all.length*100}%"></i></div></div>`;
+    }).join('')}</div>
+    <div class="rule"><span>Le journal</span></div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">${mast}</div><div class="l">maîtrisées</div></div>
+      <div class="kpi"><div class="n" style="color:var(--wine)">${due.length}</div><div class="l">à réviser</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">${S.streak}</div><div class="l">jours de suite</div></div>
+      <div class="kpi"><div class="n">${Object.values(S.days).reduce((a,b)=>a+b,0).toLocaleString('fr-FR')}</div><div class="l">XP cumulé</div></div>
+    </div>
+  </div>`;
+}
+
+function vDonjon(){
+  const due = dueList();
+  const nw = CARDS.filter(c => tierOpen(c.tier) && isNew(c.id));
+  $('#v-donjon').innerHTML = `
+  <div class="sheet grain pad">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Donjon</div>
+    <div class="prose" style="margin-top:18px;max-width:70ch">
+      <p>Le Donjon vous ressert les fiches <b>au moment précis où vous êtes sur le point de les oublier</b>.
+      Une fiche réussie remonte d'un cran et revient plus tard&nbsp;; une fiche ratée redescend et revient vite.
+      C'est le mode à faire en premier, chaque jour : dix minutes ici valent mieux qu'une heure de lecture passive.</p>
+    </div>
+    ${due.length ? `
+      <div class="rule"><span>${due.length} fiche${due.length>1?'s':''} à réviser</span></div>
+      <div class="gal">${due.map(c => cardHTML(c, true)).join('')}</div>` : `
+      <div class="rule"><span>Donjon vide</span></div>
+      <p class="mut">Rien à réviser aujourd'hui — revenez demain.
+      ${nw.length ? `En attendant, <b>${nw.length}</b> fiche${nw.length>1?'s':''} jamais ouverte${nw.length>1?'s':''} vous attend${nw.length>1?'ent':''}.` : ''}</p>
+      ${nw.length ? `<div class="gal" style="margin-top:15px">${nw.slice(0,6).map(c => cardHTML(c, true)).join('')}</div>` : ''}`}
+  </div>`;
+}
+
+const vOpen = () => $('#v-open').innerHTML = `<div class="sheet grain pad">
+  <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+  <div class="banner">Ouvertures</div>
+  <div class="prose" style="margin-top:18px;max-width:70ch"><p>Chaque ouverture est une fiche : la ligne principale coup par coup,
+  le <em>pourquoi</em> de chacun, les plans des deux camps et les pièges à connaître. Étudiez d'abord, puis récitez de mémoire.</p></div>
+  ${galleryHTML('opening')}</div>`;
+
+const vEnd = () => $('#v-end').innerHTML = `<div class="sheet grain pad">
+  <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+  <div class="banner">Finales</div>
+  <div class="prose" style="margin-top:18px;max-width:70ch"><p>La partie du jeu que presque personne ne travaille — et celle qui décide
+  le plus de parties. Ici vous ne regardez pas : <b>vous jouez la position contre le moteur</b>, qui défend au mieux.
+  Tant que la technique n'est pas juste, il tient.</p></div>
+  ${galleryHTML('endgame')}</div>`;
+
+const vTac = () => $('#v-tac').innerHTML = `<div class="sheet grain pad">
+  <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+  <div class="banner">Tactiques</div>
+  <div class="prose" style="margin-top:18px;max-width:70ch"><p>En dessous de 1800 Elo, la très grande majorité des parties se décide
+  sur une pièce en prise ou un motif manqué. Cherchez le coup <em>forçant</em> : échec, prise, menace imparable.</p></div>
+  ${galleryHTML('tactic')}</div>`;
+
+/* ---------- PARTIE contre le moteur ---------- */
+let G = null;
+function vGame(){
+  $('#v-game').innerHTML = `<div class="sheet grain pad">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Partie</div>
+    <div class="profile" style="margin-top:20px">
+      <div>
+        <div class="pname" style="font-size:31px">Le duel</div>
+        <div class="psub">Contre le moteur embarqué</div>
+        <div class="rule"><span>Réglages</span></div>
+        <div class="row" style="gap:9px;align-items:center">
+          <select id="gLvl">
+            <option value="1">Niveau 1 — apprenti</option>
+            <option value="2" selected>Niveau 2 — écuyer</option>
+            <option value="3">Niveau 3 — chevalier</option>
+          </select>
+          <select id="gSide"><option value="w">Jouer les Blancs</option><option value="b">Jouer les Noirs</option></select>
+        </div>
+        <div class="bctl" style="justify-content:flex-start;margin-top:13px">
+          <button class="btn gold" id="gNew">Nouvelle partie</button>
+          <button class="btn sm" id="gUndo">Annuler le coup</button>
+          <button class="btn sm" id="gFlip">Retourner</button>
+        </div>
+        <div class="rule"><span>Coups joués</span></div>
+        <div class="moves" id="gMoves"></div>
+        <div class="rule"><span>Conseil</span></div>
+        <p class="mut" style="font-size:14.5px">Avant chaque coup, posez-vous une seule question :
+        <em>« qu'est-ce que mon adversaire menace ? »</em> La moitié des parties perdues le sont pour avoir oublié de la poser.</p>
+      </div>
+      <div>
+        <div class="boardbox"><div class="board" id="gb"></div></div>
+        <div class="bstat" id="gStat">Choisissez vos réglages puis lancez la partie.</div>
+      </div>
+    </div></div>`;
+  const host = $('#gb');
+  G = {board: null, over: false, hist: [], level: 2, side: 'w'};
+  G.board = Board(host, {fen: START, onMove: m => gPlay(m)});
+  G.board.locked = true;
+  $('#gNew').onclick = gNew; $('#gUndo').onclick = gUndo;
+  $('#gFlip').onclick = () => { G.board.flip = !G.board.flip; G.board.draw() };
+}
+function gNew(){
+  G.level = +$('#gLvl').value; G.side = $('#gSide').value;
+  G.over = false; G.hist = [];
+  G.board.set(START); G.board.flip = G.side === 'b'; G.board.locked = false; G.board.draw();
+  $('#gStat').innerHTML = '<b>À vous.</b> Bonne partie.';
+  $('#gMoves').innerHTML = '';
+  if(G.side === 'b') gReply();
+}
+function gPaintMoves(){
+  $('#gMoves').innerHTML = G.hist.map((m,i) => (i%2===0 ? `<span class="num">${i/2+1}.</span>` : '') + `<span>${esc(m)}</span>`).join('');
+}
+function gEnd(msg, res){
+  G.over = true; G.board.locked = true;
+  $('#gStat').innerHTML = `<b>${msg}</b>`;
+  if(res === 'w'){ S.games.w++; gainXP(XPV.game[G.level-1], 'victoire') }
+  else if(res === 'd'){ S.games.d++; gainXP(Math.round(XPV.game[G.level-1]/4), 'nulle') }
+  else S.games.l++;
+  save();
+}
+function gCheck(){
+  const p = G.board.pos;
+  if(isMate(p)){
+    const winnerWhite = p.t === 'b', mine = (G.side === 'w') === winnerWhite;
+    gEnd(mine ? 'Échec et mat — vous gagnez !' : 'Échec et mat. Le moteur gagne.', mine ? 'w' : 'l');
+    return true;
+  }
+  if(isStale(p)){ gEnd('Pat — partie nulle.', 'd'); return true }
+  if(insufficient(p)){ gEnd('Matériel insuffisant — nulle.', 'd'); return true }
+  if(p.half >= 100){ gEnd('Règle des 50 coups — nulle.', 'd'); return true }
+  return false;
+}
+function gPlay(m){
+  if(G.over) return;
+  G.hist.push(san(G.board.pos, m));
+  G.board.setPos(makeMove(G.board.pos, m)); G.board.last = m; G.board.draw(); gPaintMoves();
+  if(gCheck()) return;
+  gReply();
+}
+function gReply(){
+  G.board.locked = true;
+  $('#gStat').innerHTML = '<span class="dim">Le moteur réfléchit…</span>';
+  setTimeout(() => {
+    const m = bestMove(G.board.pos, G.level);
+    if(!m){ gCheck(); return }
+    G.hist.push(san(G.board.pos, m));
+    G.board.setPos(makeMove(G.board.pos, m)); G.board.last = m; G.board.draw(); gPaintMoves();
+    if(gCheck()) return;
+    G.board.locked = false;
+    $('#gStat').innerHTML = inCheck(G.board.pos, G.board.pos.t === 'w') ? '<b style="color:var(--ko)">Échec !</b>' : '<b>À vous.</b>';
+  }, 60);
+}
+function gUndo(){
+  if(G.over || G.hist.length < 2) return;
+  G.hist = G.hist.slice(0, -2);
+  let p = parseFEN(START);
+  for(const s of G.hist) p = makeMove(p, fromSAN(p, s));
+  G.board.setPos(p); G.board.last = null; G.board.locked = false; G.board.draw(); gPaintMoves();
+  $('#gStat').innerHTML = '<b>Coup annulé.</b> À vous.';
+}
+
+/* ---------- CODEX ---------- */
+function vCodex(){
+  const rows = CARDS.map(c => `<tr>
+    <td>${esc(c.name)}</td><td class="dim">${KIND[c.kind].ic}</td><td class="dim">${c.tier}</td>
+    <td>${starHTML(stars(c.id))}</td><td class="dim">${rec(c.id).ok}</td>
+    <td class="dim">${S.items[c.id] && S.items[c.id].next ? (isDue(c.id) ? '<b style="color:var(--wine)">maintenant</b>' : S.items[c.id].next) : '—'}</td></tr>`).join('');
+  $('#v-codex').innerHTML = `<div class="sheet grain pad">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Codex</div>
+    <div class="rule"><span>Les principes</span></div>
+    <div class="gal">${PRINCIPLES.map((p,i) => `<div class="gcard" onclick="showPrinciple(${i})">
+      <div class="gn" style="font-size:18px">${esc(p.t || ('Principe ' + (i+1)))}</div>
+      <div class="gs">${esc((p.c || '').replace(/<[^>]+>/g,'').slice(0,110))}…</div>
+      <div class="gf"><span class="tag gold">Lire</span></div></div>`).join('')}</div>
+
+    <div class="rule"><span>Comment progresser</span></div>
+    <div class="prose" style="max-width:72ch">
+      <p><b>1. Le Donjon d'abord.</b> Chaque jour. C'est la répétition espacée qui transforme « j'ai compris » en « je sais ».</p>
+      <p><b>2. Étudier puis réciter.</b> Sur une ouverture, faites l'étude commentée, puis « Réciter de mémoire ». Tant que vous ne récitez pas sans faute, ce n'est pas acquis.</p>
+      <p><b>3. Les finales se jouent, ne se lisent pas.</b> Le moteur défend au mieux : s'il tient, votre technique est encore approximative.</p>
+      <p><b>4. Priorité aux finales et aux tactiques.</b> Contre-intuitif, mais en dessous de 1800 Elo les parties se décident là — pas sur le 12ᵉ coup d'une Najdorf.</p>
+      <p><b>5. Jouer de vraies parties longues.</b> Deux ou trois par semaine, en 15+10. Notez votre Elo ci-dessous.</p>
+    </div>
+
+    <div class="rule"><span>Classement Elo</span></div>
+    <div class="row" style="align-items:center;gap:9px">
+      <input type="number" id="eloIn" placeholder="ex. 1240" style="width:135px">
+      <button class="btn sm" id="eloAdd">Enregistrer</button>
+      <span class="dim" style="font-size:14px">${S.elo.length ? `Actuel ${S.elo[S.elo.length-1].v} · départ ${S.elo[0].v} (${S.elo[S.elo.length-1].v - S.elo[0].v >= 0 ? '+' : ''}${S.elo[S.elo.length-1].v - S.elo[0].v})` : 'aucune mesure'}</span>
+    </div>
+    ${S.elo.length > 1 ? `<div style="margin-top:12px">${spark(S.elo.map(e => e.v))}</div>` : ''}
+
+    <div class="rule"><span>Fiabilité du contenu</span></div>
+    <div class="prose" style="max-width:72ch">
+      <p>Les <b>${CARDS.length} fiches</b> ont été vérifiées coup par coup par un moteur d'échecs avant d'être intégrées :
+      chaque coup est légal, chaque mat annoncé en est un, aucun pat involontaire, aucune position impossible.</p>
+      <p>Deux positions ont dû être <b>corrigées</b> à cette occasion :</p>
+      <ul>
+        <li><b>Le mat arabe</b> — la tour partait d'une case où elle faisait déjà échec : la position ne pouvait pas exister.</li>
+        <li><b>L'opposition</b> — l'exercice demandait de promouvoir une position <em>objectivement nulle</em>.
+        Un solveur exact (les 331 352 positions Roi+Pion contre Roi, résolues par analyse rétrograde) a tranché.
+        La nouvelle position est gagnante, et seuls les coups de roi conservent le gain : la leçon est enfin démontrable.</li>
+      </ul>
+    </div>
+
+    <div class="rule"><span>Vos fiches</span></div>
+    <div style="overflow-x:auto"><table>
+      <tr><th>Fiche</th><th></th><th>P.</th><th>Maîtrise</th><th>Réussies</th><th>Révision</th></tr>${rows}</table></div>
+
+    <div class="rule"><span>Sauvegarde</span></div>
+    <p class="mut" style="font-size:14.5px">Tout est stocké dans ce navigateur uniquement. Exportez de temps en temps :
+    effacer les données de navigation effacerait votre progression.</p>
+    <div class="bctl" style="justify-content:flex-start">
+      <button class="btn sm" id="svExp">Exporter</button>
+      <button class="btn sm" id="svImp">Importer</button>
+      <button class="btn sm" id="svRst" style="border-color:var(--ko);color:var(--ko)">Réinitialiser</button>
+      <input type="file" id="svFile" accept="application/json" class="hide">
+    </div>
+  </div>`;
+  $('#eloAdd').onclick = () => {
+    const v = +$('#eloIn').value;
+    if(!v || v < 100 || v > 3500) return toast('Entrez un Elo entre 100 et 3500.');
+    S.elo.push({d: today(), v}); save(); gainXP(XPV.elo, 'Elo enregistré'); vCodex();
+  };
+  $('#svExp').onclick = () => {
+    const b = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'echecs_hunter_' + today() + '.json'; a.click();
+    toast('Sauvegarde exportée.');
+  };
+  $('#svImp').onclick = () => $('#svFile').click();
+  $('#svFile').onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { try{ S = Object.assign(fresh(), JSON.parse(r.result)); save(); render(); toast('Sauvegarde importée.') }catch(x){ toast('Fichier illisible.') } };
+    r.readAsText(f);
+  };
+  $('#svRst').onclick = () => { if(confirm('Effacer toute votre progression ? Action irréversible.')){ S = fresh(); save(); render(); toast('Progression réinitialisée.') } };
+}
+function showPrinciple(i){
+  const p = PRINCIPLES[i];
+  overlay(`<div class="pad grain">
+    <div class="corners"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+    <div class="banner">Principe</div>
+    <div style="max-width:70ch;margin:20px auto 0">
+      <div class="pname" style="font-size:31px">${esc(p.t || '')}</div>
+      <div class="prose" style="margin-top:13px">${p.c || ''}</div>
+    </div></div>`);
+  const o = rec('princ-' + i);
+  if(!o.ok){ o.ok = 1; save(); gainXP(XPV.princ, 'principe lu') }
+}
+function spark(vals){
+  const w = 600, h = 62, mn = Math.min(...vals), mx = Math.max(...vals), sp = (mx - mn) || 1;
+  const pts = vals.map((v,i) => `${(i/(vals.length-1||1)*w).toFixed(1)},${(h - (v-mn)/sp*(h-10) - 5).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+    <polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2"/>
+    ${vals.map((v,i) => `<circle cx="${(i/(vals.length-1||1)*w).toFixed(1)}" cy="${(h-(v-mn)/sp*(h-10)-5).toFixed(1)}" r="2.5" fill="var(--gold)"/>`).join('')}</svg>`;
+}
+
+/* ==========================================================
+   NAVIGATION
+   ========================================================== */
+const VIEWS = {profil:vProfil, donjon:vDonjon, ouvertures:vOpen, finales:vEnd, tactiques:vTac, partie:vGame, codex:vCodex};
+let CURRENT = 'profil';
+function go(v){
+  CURRENT = v;
+  $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  $$('.view').forEach(s => s.classList.remove('on'));
+  $('#v-' + ({profil:'profil',donjon:'donjon',ouvertures:'open',finales:'end',tactiques:'tac',partie:'game',codex:'codex'})[v]).classList.add('on');
+  VIEWS[v]();
+  window.scrollTo(0,0);
+}
+function render(){ VIEWS[CURRENT](); paintHead() }
+function paintHead(){
+  const lvl = levelOf(S.xp), rk = rankOf(lvl);
+  $('#hLvl').textContent = S.xp.toLocaleString('fr-FR');
+  $('#hRank').textContent = `Rang ${rk} · Niv. ${lvl}`;
+  const n = dueList().length, pip = $('#pipDonjon');
+  pip.textContent = n; pip.classList.toggle('hide', !n);
+}
+function applyTheme(){
+  document.documentElement.dataset.theme = S.theme === 'dark' ? 'dark' : 'light';
+  $('#themeBtn').textContent = S.theme === 'dark' ? '☾' : '☀';
+  const m = document.querySelector('meta[name=theme-color]');
+  if(m) m.content = S.theme === 'dark' ? '#221b12' : '#f4ead4';
+}
+$$('nav button').forEach(b => b.onclick = () => go(b.dataset.v));
+$('#themeBtn').onclick = () => { S.theme = S.theme === 'dark' ? 'light' : 'dark'; save(); applyTheme() };
+
+applyTheme();
+paintHead();
+go('profil');
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+</script>
+</body>
+</html>
